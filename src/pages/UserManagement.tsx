@@ -92,8 +92,13 @@ export default function UserManagement() {
 
   const handleAddUser = async () => {
     try {
+      // Enhanced input validation
+      const username = formData.username?.trim() || '';
+      const fullName = formData.full_name?.trim() || '';
+      const password = formData.password || '';
+
       // Validate required fields
-      if (!formData.username || !formData.password) {
+      if (!username || !password) {
         toast({
           title: "เกิดข้อผิดพลาด",
           description: "กรุณากรอกชื่อผู้ใช้และรหัสผ่าน",
@@ -102,8 +107,59 @@ export default function UserManagement() {
         return;
       }
 
+      // Username validation
+      if (username.length < 3 || username.length > 50) {
+        toast({
+          title: "ชื่อผู้ใช้ต้องมีความยาว 3-50 ตัวอักษร",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      if (!/^[a-zA-Z0-9@._-]+$/.test(username)) {
+        toast({
+          title: "ชื่อผู้ใช้มีรูปแบบไม่ถูกต้อง",
+          description: "ใช้ได้เฉพาะตัวอักษร ตัวเลข @ . _ -",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Full name validation
+      if (fullName && fullName.length > 100) {
+        toast({
+          title: "ชื่อ-นามสกุลต้องไม่เกิน 100 ตัวอักษร",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Password validation
+      const passwordErrors: string[] = [];
+      if (password.length < 8) {
+        passwordErrors.push('รหัสผ่านต้องมีอย่างน้อย 8 ตัวอักษร');
+      }
+      if (!/[A-Z]/.test(password)) {
+        passwordErrors.push('ต้องมีตัวพิมพ์ใหญ่อย่างน้อย 1 ตัว');
+      }
+      if (!/[a-z]/.test(password)) {
+        passwordErrors.push('ต้องมีตัวพิมพ์เล็กอย่างน้อย 1 ตัว');
+      }
+      if (!/[0-9]/.test(password)) {
+        passwordErrors.push('ต้องมีตัวเลขอย่างน้อย 1 ตัว');
+      }
+
+      if (passwordErrors.length > 0) {
+        toast({
+          title: "รหัสผ่านไม่ปลอดภัย",
+          description: passwordErrors.join(', '),
+          variant: "destructive",
+        });
+        return;
+      }
+
       // Sanitize username to create a valid email
-      let emailUsername = formData.username.toLowerCase().trim();
+      let emailUsername = username.toLowerCase();
       // ถ้ามี @ ให้เอาเฉพาะส่วนหน้า @
       if (emailUsername.includes('@')) {
         emailUsername = emailUsername.split('@')[0];
@@ -119,10 +175,10 @@ export default function UserManagement() {
       // Create user via Supabase Auth
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: generatedEmail,
-        password: formData.password,
+        password: password,
         options: {
           data: {
-            username: formData.username,
+            username: username,
             full_name: formData.full_name,
           },
           emailRedirectTo: `${window.location.origin}/`,

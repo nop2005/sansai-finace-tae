@@ -112,8 +112,29 @@ Deno.serve(async (req) => {
     } else if (body.action === 'reset-password') {
       console.log(`Resetting password for user: ${body.userId}`);
 
-      if (!body.newPassword || body.newPassword.length < 6) {
-        throw new Error('รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร');
+      // Enhanced password validation
+      if (!body.newPassword) {
+        throw new Error('กรุณาระบุรหัสผ่าน');
+      }
+
+      const password = body.newPassword;
+      const errors: string[] = [];
+
+      if (password.length < 8) {
+        errors.push('รหัสผ่านต้องมีอย่างน้อย 8 ตัวอักษร');
+      }
+      if (!/[A-Z]/.test(password)) {
+        errors.push('ต้องมีตัวพิมพ์ใหญ่อย่างน้อย 1 ตัว');
+      }
+      if (!/[a-z]/.test(password)) {
+        errors.push('ต้องมีตัวพิมพ์เล็กอย่างน้อย 1 ตัว');
+      }
+      if (!/[0-9]/.test(password)) {
+        errors.push('ต้องมีตัวเลขอย่างน้อย 1 ตัว');
+      }
+
+      if (errors.length > 0) {
+        throw new Error('รหัสผ่านไม่ปลอดภัย: ' + errors.join(', '));
       }
 
       const { error: updateError } = await supabaseAdmin.auth.admin.updateUserById(
@@ -141,10 +162,19 @@ Deno.serve(async (req) => {
   } catch (error) {
     console.error('Error in manage-users function:', error);
     
+    // Return user-friendly error for known cases, generic error for others
+    const userMessage = error instanceof Error && 
+      (error.message.includes('รหัสผ่าน') || 
+       error.message.includes('ไม่พบข้อมูล') ||
+       error.message.includes('ไม่สามารถยืนยัน') ||
+       error.message.includes('คุณต้องเป็น'))
+      ? error.message 
+      : 'เกิดข้อผิดพลาดในการดำเนินการ กรุณาลองใหม่อีกครั้ง';
+    
     return new Response(
       JSON.stringify({
         success: false,
-        error: error instanceof Error ? error.message : 'เกิดข้อผิดพลาด',
+        error: userMessage,
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
