@@ -52,11 +52,6 @@ export default function UserManagement() {
 
   const fetchUsers = async () => {
     try {
-      // Get all users from auth.users via admin API
-      const { data: authData, error: authError } = await supabase.auth.admin.listUsers();
-      
-      if (authError) throw authError;
-
       const { data: profiles, error: profilesError } = await supabase
         .from("profiles")
         .select("id, username, full_name");
@@ -69,17 +64,16 @@ export default function UserManagement() {
 
       if (rolesError) throw rolesError;
 
-      const usersWithRoles = authData.users.map((authUser) => {
-        const profile = profiles.find((p) => p.id === authUser.id);
+      const usersWithRoles = profiles.map((profile) => {
         const roles = userRoles
-          .filter((ur) => ur.user_id === authUser.id)
+          .filter((ur) => ur.user_id === profile.id)
           .map((ur) => ur.role as AppRole);
 
         return {
-          id: authUser.id,
-          email: authUser.email || "",
-          username: profile?.username || authUser.email || "",
-          full_name: profile?.full_name || null,
+          id: profile.id,
+          email: profile.username, // ใช้ username แทน email
+          username: profile.username,
+          full_name: profile.full_name || null,
           roles: roles,
         };
       });
@@ -186,52 +180,22 @@ export default function UserManagement() {
   };
 
   const handleDeleteUser = async (userId: string) => {
-    try {
-      // Delete user via admin API
-      const { error } = await supabase.auth.admin.deleteUser(userId);
-
-      if (error) throw error;
-
-      toast({
-        title: "สำเร็จ",
-        description: "ลบผู้ใช้เรียบร้อยแล้ว",
-      });
-
-      fetchUsers();
-    } catch (error: any) {
-      toast({
-        title: "เกิดข้อผิดพลาด",
-        description: error.message,
-        variant: "destructive",
-      });
-    }
+    toast({
+      title: "ไม่สามารถดำเนินการได้",
+      description: "การลบผู้ใช้ต้องทำผ่านระบบ backend",
+      variant: "destructive",
+    });
   };
 
   const handleResetPassword = async () => {
-    if (!selectedUser || !newPassword) return;
-
-    try {
-      const { error } = await supabase.auth.admin.updateUserById(selectedUser.id, {
-        password: newPassword,
-      });
-
-      if (error) throw error;
-
-      toast({
-        title: "สำเร็จ",
-        description: "รีเซ็ตรหัสผ่านเรียบร้อยแล้ว",
-      });
-
-      setResetPasswordDialogOpen(false);
-      setSelectedUser(null);
-      setNewPassword("");
-    } catch (error: any) {
-      toast({
-        title: "เกิดข้อผิดพลาด",
-        description: error.message,
-        variant: "destructive",
-      });
-    }
+    toast({
+      title: "ไม่สามารถดำเนินการได้",
+      description: "การรีเซ็ตรหัสผ่านต้องทำผ่านระบบ backend",
+      variant: "destructive",
+    });
+    setResetPasswordDialogOpen(false);
+    setSelectedUser(null);
+    setNewPassword("");
   };
 
   const openEditDialog = (user: UserWithRole) => {
@@ -355,8 +319,7 @@ export default function UserManagement() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>อีเมล</TableHead>
-                <TableHead>ชื่อผู้ใช้</TableHead>
+                  <TableHead>ชื่อผู้ใช้</TableHead>
                 <TableHead>ชื่อ-นามสกุล</TableHead>
                 <TableHead>สิทธิ์การใช้งาน</TableHead>
                 <TableHead className="text-right">จัดการ</TableHead>
@@ -365,7 +328,6 @@ export default function UserManagement() {
             <TableBody>
               {users.map((user) => (
                 <TableRow key={user.id}>
-                  <TableCell>{user.email}</TableCell>
                   <TableCell>{user.username}</TableCell>
                   <TableCell>{user.full_name || "-"}</TableCell>
                   <TableCell>
