@@ -121,18 +121,11 @@ export default function UserManagement() {
       if (authError) throw authError;
       if (!authData.user) throw new Error("ไม่สามารถสร้างผู้ใช้ได้");
 
-      // Update role if not default
-      if (formData.role !== "ผู้ใช้ทั่วไป") {
-        await supabase.from("user_roles").delete().eq("user_id", authData.user.id);
-        await supabase.from("user_roles").insert({
-          user_id: authData.user.id,
-          role: formData.role,
-        });
-      }
+      // ไม่กำหนด role เริ่มต้น - แอดมินจะกำหนดทีหลัง
 
       toast({
         title: "สำเร็จ",
-        description: "เพิ่มผู้ใช้เรียบร้อยแล้ว",
+        description: "เพิ่มผู้ใช้เรียบร้อยแล้ว (ยังไม่มีสิทธิ์การใช้งาน)",
       });
 
       setAddDialogOpen(false);
@@ -331,23 +324,6 @@ export default function UserManagement() {
                   onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
                   placeholder="ชื่อ นามสกุล"
                 />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="add-role">สิทธิ์การใช้งาน</Label>
-                <Select
-                  value={formData.role}
-                  onValueChange={(value) => setFormData({ ...formData, role: value as AppRole })}
-                >
-                  <SelectTrigger id="add-role">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="ผู้ใช้ทั่วไป">ผู้ใช้ทั่วไป</SelectItem>
-                    <SelectItem value="บัญชี">บัญชี</SelectItem>
-                    <SelectItem value="ผู้บริหาร">ผู้บริหาร</SelectItem>
-                    <SelectItem value="แอดมิน">แอดมิน</SelectItem>
-                  </SelectContent>
-                </Select>
               </div>
             </div>
             <DialogFooter>
