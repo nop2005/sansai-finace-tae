@@ -102,8 +102,19 @@ export default function UserManagement() {
         return;
       }
 
-      // Create email from username (required by Supabase Auth)
-      const generatedEmail = `${formData.username}@internal.local`;
+      // Sanitize username to create a valid email
+      let emailUsername = formData.username.toLowerCase().trim();
+      // ถ้ามี @ ให้เอาเฉพาะส่วนหน้า @
+      if (emailUsername.includes('@')) {
+        emailUsername = emailUsername.split('@')[0];
+      }
+      // เอาเฉพาะตัวอักษร ตัวเลข และ . - _
+      emailUsername = emailUsername.replace(/[^a-z0-9._-]/g, '');
+      // ถ้า sanitize แล้วไม่เหลืออะไร ให้ใช้ user + timestamp
+      if (!emailUsername) {
+        emailUsername = `user${Date.now()}`;
+      }
+      const generatedEmail = `${emailUsername}@internal.local`;
 
       // Create user via Supabase Auth
       const { data: authData, error: authError } = await supabase.auth.signUp({
