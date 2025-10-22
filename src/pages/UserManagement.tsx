@@ -193,22 +193,66 @@ export default function UserManagement() {
   };
 
   const handleDeleteUser = async (userId: string) => {
-    toast({
-      title: "ไม่สามารถดำเนินการได้",
-      description: "การลบผู้ใช้ต้องทำผ่านระบบ backend",
-      variant: "destructive",
-    });
+    try {
+      const { data, error } = await supabase.functions.invoke('manage-users', {
+        body: { action: 'delete', userId },
+      });
+
+      if (error) throw error;
+      if (!data.success) throw new Error(data.error);
+
+      toast({
+        title: "สำเร็จ",
+        description: "ลบผู้ใช้เรียบร้อยแล้ว",
+      });
+
+      fetchUsers();
+    } catch (error: any) {
+      toast({
+        title: "เกิดข้อผิดพลาด",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
   };
 
   const handleResetPassword = async () => {
-    toast({
-      title: "ไม่สามารถดำเนินการได้",
-      description: "การรีเซ็ตรหัสผ่านต้องทำผ่านระบบ backend",
-      variant: "destructive",
-    });
-    setResetPasswordDialogOpen(false);
-    setSelectedUser(null);
-    setNewPassword("");
+    if (!selectedUser || !newPassword) {
+      toast({
+        title: "เกิดข้อผิดพลาด",
+        description: "กรุณากรอกรหัสผ่านใหม่",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const { data, error } = await supabase.functions.invoke('manage-users', {
+        body: {
+          action: 'reset-password',
+          userId: selectedUser.id,
+          newPassword,
+        },
+      });
+
+      if (error) throw error;
+      if (!data.success) throw new Error(data.error);
+
+      toast({
+        title: "สำเร็จ",
+        description: "รีเซ็ตรหัสผ่านเรียบร้อยแล้ว",
+      });
+
+      setResetPasswordDialogOpen(false);
+      setSelectedUser(null);
+      setNewPassword("");
+    } catch (error: any) {
+      toast({
+        title: "เกิดข้อผิดพลาด",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
   };
 
   const openEditDialog = (user: UserWithRole) => {
