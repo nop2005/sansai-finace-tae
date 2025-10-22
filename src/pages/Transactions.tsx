@@ -194,42 +194,6 @@ export default function Transactions() {
         </p>
       </div>
 
-      {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium text-muted-foreground">รายรับรวม</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-income">
-              ฿{totalIncome.toLocaleString()}
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium text-muted-foreground">รายจ่ายรวม</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-expense">
-              ฿{totalExpense.toLocaleString()}
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium text-muted-foreground">สุทธิ</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-primary">
-              ฿{(totalIncome - totalExpense).toLocaleString()}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
       {/* Filters */}
       <Card>
         <CardContent className="pt-6">
@@ -380,6 +344,42 @@ export default function Transactions() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Summary Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-medium text-muted-foreground">รายรับรวม</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-income">
+              ฿{totalIncome.toLocaleString()}
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-medium text-muted-foreground">รายจ่ายรวม</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-expense">
+              ฿{totalExpense.toLocaleString()}
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-medium text-muted-foreground">สุทธิ</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-primary">
+              ฿{(totalIncome - totalExpense).toLocaleString()}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
 
       {/* Transactions List */}
       <Card>
