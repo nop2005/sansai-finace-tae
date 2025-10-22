@@ -92,9 +92,22 @@ export default function UserManagement() {
 
   const handleAddUser = async () => {
     try {
+      // Validate required fields
+      if (!formData.username || !formData.password) {
+        toast({
+          title: "เกิดข้อผิดพลาด",
+          description: "กรุณากรอกชื่อผู้ใช้และรหัสผ่าน",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Create email from username (required by Supabase Auth)
+      const generatedEmail = `${formData.username}@internal.local`;
+
       // Create user via Supabase Auth
       const { data: authData, error: authError } = await supabase.auth.signUp({
-        email: formData.email,
+        email: generatedEmail,
         password: formData.password,
         options: {
           data: {
@@ -246,13 +259,13 @@ export default function UserManagement() {
             </DialogHeader>
             <div className="grid gap-4 py-4">
               <div className="grid gap-2">
-                <Label htmlFor="add-email">อีเมล</Label>
+                <Label htmlFor="add-username">ชื่อผู้ใช้</Label>
                 <Input
-                  id="add-email"
-                  type="email"
-                  value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  placeholder="user@example.com"
+                  id="add-username"
+                  value={formData.username}
+                  onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+                  placeholder="username"
+                  required
                 />
               </div>
               <div className="grid gap-2">
@@ -263,15 +276,7 @@ export default function UserManagement() {
                   value={formData.password}
                   onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                   placeholder="••••••••"
-                />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="add-username">ชื่อผู้ใช้</Label>
-                <Input
-                  id="add-username"
-                  value={formData.username}
-                  onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-                  placeholder="username"
+                  required
                 />
               </div>
               <div className="grid gap-2">
