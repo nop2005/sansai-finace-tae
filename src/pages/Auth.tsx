@@ -42,10 +42,18 @@ export default function Auth() {
     try {
       if (isLogin) {
         // ค้นหา email จาก username ใน profiles table
+        // รองรับทั้งกรณีที่ผู้ใช้พิมพ์ username หรือ email
+        let searchValue = email.toLowerCase().trim();
+        
+        // ถ้าพิมพ์มาเป็น email ให้ตัดเอาแค่ส่วนหน้า @ (username)
+        if (searchValue.includes('@')) {
+          searchValue = searchValue.split('@')[0];
+        }
+        
         const { data: profile, error: profileError } = await supabase
           .from('profiles')
           .select('email')
-          .eq('username', email)
+          .eq('username', searchValue)
           .single();
 
         if (profileError || !profile?.email) {
