@@ -74,9 +74,14 @@ Deno.serve(async (req) => {
       throw new Error('ไม่สามารถตรวจสอบสิทธิ์ได้');
     }
 
+    console.log('User ID:', user.id);
+    console.log('User roles:', roles);
+
     const isAdmin = roles?.some((r) => r.role === 'แอดมิน');
+    console.log('Is admin:', isAdmin);
+    
     if (!isAdmin) {
-      throw new Error('ไม่มีสิทธิ์ดำเนินการ');
+      throw new Error('คุณต้องเป็นแอดมินเท่านั้นถึงจะสามารถดำเนินการได้');
     }
 
     // Parse request body
