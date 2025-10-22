@@ -111,8 +111,8 @@ Deno.serve(async (req) => {
         throw new Error('กรุณากรอกอีเมลและรหัสผ่าน');
       }
 
-      // Email validation
-      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      // Email validation - รองรับอีเมลทุกรูปแบบ
+      if (!email.includes('@') || email.length < 3) {
         throw new Error('รูปแบบอีเมลไม่ถูกต้อง');
       }
 

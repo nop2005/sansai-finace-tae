@@ -97,7 +97,7 @@ export default function UserManagement() {
         body: {
           action: 'create',
           email: formData.email,
-          username: formData.username,
+          username: formData.email.split('@')[0], // ใช้ส่วนหน้า @ เป็น username
           password: formData.password,
           full_name: formData.full_name,
           role: formData.role,
@@ -288,15 +288,6 @@ export default function UserManagement() {
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                   placeholder="user@example.com"
                   required
-                />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="add-username">ชื่อผู้ใช้</Label>
-                <Input
-                  id="add-username"
-                  value={formData.username}
-                  onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-                  placeholder="username"
                 />
               </div>
               <div className="grid gap-2">
