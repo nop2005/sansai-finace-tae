@@ -303,7 +303,7 @@ export default function UserManagement() {
             </DialogHeader>
             <div className="grid gap-4 py-4">
               <div className="grid gap-2">
-                <Label htmlFor="add-username">ชื่อผู้ใช้</Label>
+                <Label htmlFor="add-username">ชื่อผู้ใช้ (อีเมล)</Label>
                 <Input
                   id="add-username"
                   value={formData.username}
