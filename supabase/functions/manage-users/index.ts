@@ -16,7 +16,15 @@ interface ResetPasswordRequest {
   newPassword: string;
 }
 
-type RequestBody = DeleteUserRequest | ResetPasswordRequest;
+interface CreateUserRequest {
+  action: 'create';
+  username: string;
+  password: string;
+  full_name: string;
+  role: string;
+}
+
+type RequestBody = DeleteUserRequest | ResetPasswordRequest | CreateUserRequest;
 
 Deno.serve(async (req) => {
   // Handle CORS preflight requests
@@ -88,7 +96,109 @@ Deno.serve(async (req) => {
     const body: RequestBody = await req.json();
 
     // Handle different actions
-    if (body.action === 'delete') {
+    if (body.action === 'create') {
+      console.log(`Creating user: ${body.username}`);
+
+      // Enhanced input validation
+      const username = body.username?.trim() || '';
+      const fullName = body.full_name?.trim() || '';
+      const password = body.password || '';
+
+      // Validate required fields
+      if (!username || !password) {
+        throw new Error('กรุณากรอกชื่อผู้ใช้และรหัสผ่าน');
+      }
+
+      // Username validation
+      if (username.length < 3 || username.length > 50) {
+        throw new Error('ชื่อผู้ใช้ต้องมีความยาว 3-50 ตัวอักษร');
+      }
+
+      if (!/^[a-zA-Z0-9@._-]+$/.test(username)) {
+        throw new Error('ชื่อผู้ใช้มีรูปแบบไม่ถูกต้อง ใช้ได้เฉพาะตัวอักษร ตัวเลข @ . _ -');
+      }
+
+      // Full name validation
+      if (fullName && fullName.length > 100) {
+        throw new Error('ชื่อ-นามสกุลต้องไม่เกิน 100 ตัวอักษร');
+      }
+
+      // Password validation
+      const passwordErrors: string[] = [];
+      if (password.length < 8) {
+        passwordErrors.push('รหัสผ่านต้องมีอย่างน้อย 8 ตัวอักษร');
+      }
+      if (!/[A-Z]/.test(password)) {
+        passwordErrors.push('ต้องมีตัวพิมพ์ใหญ่อย่างน้อย 1 ตัว');
+      }
+      if (!/[a-z]/.test(password)) {
+        passwordErrors.push('ต้องมีตัวพิมพ์เล็กอย่างน้อย 1 ตัว');
+      }
+      if (!/[0-9]/.test(password)) {
+        passwordErrors.push('ต้องมีตัวเลขอย่างน้อย 1 ตัว');
+      }
+
+      if (passwordErrors.length > 0) {
+        throw new Error('รหัสผ่านไม่ปลอดภัย: ' + passwordErrors.join(', '));
+      }
+
+      // Sanitize username to create a valid email
+      let emailUsername = username.toLowerCase();
+      if (emailUsername.includes('@')) {
+        emailUsername = emailUsername.split('@')[0];
+      }
+      emailUsername = emailUsername.replace(/[^a-z0-9._-]/g, '');
+      if (!emailUsername) {
+        emailUsername = `user${Date.now()}`;
+      }
+      const generatedEmail = `${emailUsername}@internal.local`;
+
+      // Create user via admin API
+      const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
+        email: generatedEmail,
+        password: password,
+        email_confirm: true,
+        user_metadata: {
+          username: username,
+          full_name: fullName,
+        },
+      });
+
+      if (authError) throw authError;
+      if (!authData.user) throw new Error('ไม่สามารถสร้างผู้ใช้ได้');
+
+      console.log(`User created: ${authData.user.id}`);
+
+      // Assign role using admin client
+      const { error: roleError } = await supabaseAdmin
+        .from('user_roles')
+        .insert({
+          user_id: authData.user.id,
+          role: body.role,
+        });
+
+      if (roleError) {
+        console.error('Error assigning role:', roleError);
+        // If role assignment fails, delete the user
+        await supabaseAdmin.auth.admin.deleteUser(authData.user.id);
+        throw new Error('ไม่สามารถกำหนดสิทธิ์ให้ผู้ใช้ได้');
+      }
+
+      console.log(`Role assigned successfully: ${body.role}`);
+
+      return new Response(
+        JSON.stringify({ 
+          success: true, 
+          message: `เพิ่มผู้ใช้เรียบร้อยแล้ว (สิทธิ์: ${body.role})`,
+          userId: authData.user.id 
+        }),
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 200,
+        }
+      );
+
+    } else if (body.action === 'delete') {
       console.log(`Deleting user: ${body.userId}`);
       
       const { error: deleteError } = await supabaseAdmin.auth.admin.deleteUser(
@@ -167,6 +277,9 @@ Deno.serve(async (req) => {
       (error.message.includes('รหัสผ่าน') || 
        error.message.includes('ไม่พบข้อมูล') ||
        error.message.includes('ไม่สามารถยืนยัน') ||
+       error.message.includes('ชื่อผู้ใช้') ||
+       error.message.includes('ชื่อ-นามสกุล') ||
+       error.message.includes('กรุณากรอก') ||
        error.message.includes('คุณต้องเป็น'))
       ? error.message 
       : 'เกิดข้อผิดพลาดในการดำเนินการ กรุณาลองใหม่อีกครั้ง';

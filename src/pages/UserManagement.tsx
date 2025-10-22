@@ -92,120 +92,23 @@ export default function UserManagement() {
 
   const handleAddUser = async () => {
     try {
-      // Enhanced input validation
-      const username = formData.username?.trim() || '';
-      const fullName = formData.full_name?.trim() || '';
-      const password = formData.password || '';
-
-      // Validate required fields
-      if (!username || !password) {
-        toast({
-          title: "เกิดข้อผิดพลาด",
-          description: "กรุณากรอกชื่อผู้ใช้และรหัสผ่าน",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      // Username validation
-      if (username.length < 3 || username.length > 50) {
-        toast({
-          title: "ชื่อผู้ใช้ต้องมีความยาว 3-50 ตัวอักษร",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      if (!/^[a-zA-Z0-9@._-]+$/.test(username)) {
-        toast({
-          title: "ชื่อผู้ใช้มีรูปแบบไม่ถูกต้อง",
-          description: "ใช้ได้เฉพาะตัวอักษร ตัวเลข @ . _ -",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      // Full name validation
-      if (fullName && fullName.length > 100) {
-        toast({
-          title: "ชื่อ-นามสกุลต้องไม่เกิน 100 ตัวอักษร",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      // Password validation
-      const passwordErrors: string[] = [];
-      if (password.length < 8) {
-        passwordErrors.push('รหัสผ่านต้องมีอย่างน้อย 8 ตัวอักษร');
-      }
-      if (!/[A-Z]/.test(password)) {
-        passwordErrors.push('ต้องมีตัวพิมพ์ใหญ่อย่างน้อย 1 ตัว');
-      }
-      if (!/[a-z]/.test(password)) {
-        passwordErrors.push('ต้องมีตัวพิมพ์เล็กอย่างน้อย 1 ตัว');
-      }
-      if (!/[0-9]/.test(password)) {
-        passwordErrors.push('ต้องมีตัวเลขอย่างน้อย 1 ตัว');
-      }
-
-      if (passwordErrors.length > 0) {
-        toast({
-          title: "รหัสผ่านไม่ปลอดภัย",
-          description: passwordErrors.join(', '),
-          variant: "destructive",
-        });
-        return;
-      }
-
-      // Sanitize username to create a valid email
-      let emailUsername = username.toLowerCase();
-      // ถ้ามี @ ให้เอาเฉพาะส่วนหน้า @
-      if (emailUsername.includes('@')) {
-        emailUsername = emailUsername.split('@')[0];
-      }
-      // เอาเฉพาะตัวอักษร ตัวเลข และ . - _
-      emailUsername = emailUsername.replace(/[^a-z0-9._-]/g, '');
-      // ถ้า sanitize แล้วไม่เหลืออะไร ให้ใช้ user + timestamp
-      if (!emailUsername) {
-        emailUsername = `user${Date.now()}`;
-      }
-      const generatedEmail = `${emailUsername}@internal.local`;
-
-      // Create user via Supabase Auth
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-        email: generatedEmail,
-        password: password,
-        options: {
-          data: {
-            username: username,
-            full_name: formData.full_name,
-          },
-          emailRedirectTo: `${window.location.origin}/`,
+      // Call edge function to create user with role
+      const { data, error } = await supabase.functions.invoke('manage-users', {
+        body: {
+          action: 'create',
+          username: formData.username,
+          password: formData.password,
+          full_name: formData.full_name,
+          role: formData.role,
         },
       });
 
-      if (authError) throw authError;
-      if (!authData.user) throw new Error("ไม่สามารถสร้างผู้ใช้ได้");
-
-      // กำหนด role เริ่มต้นเป็น "ผู้ใช้ทั่วไป" เพื่อให้ login ได้
-      const { error: roleError } = await supabase
-        .from("user_roles")
-        .insert({
-          user_id: authData.user.id,
-          role: formData.role,
-        });
-
-      if (roleError) {
-        console.error("Error assigning role:", roleError);
-        // ถ้ากำหนด role ไม่สำเร็จ ให้ลบ user ที่สร้างไว้
-        await supabase.auth.admin.deleteUser(authData.user.id);
-        throw new Error("ไม่สามารถกำหนดสิทธิ์ให้ผู้ใช้ได้");
-      }
+      if (error) throw error;
+      if (!data.success) throw new Error(data.error);
 
       toast({
         title: "สำเร็จ",
-        description: `เพิ่มผู้ใช้เรียบร้อยแล้ว (สิทธิ์: ${formData.role})`,
+        description: data.message,
       });
 
       setAddDialogOpen(false);
@@ -404,6 +307,23 @@ export default function UserManagement() {
                   onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
                   placeholder="ชื่อ นามสกุล"
                 />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="add-role">สิทธิ์การใช้งาน</Label>
+                <Select
+                  value={formData.role}
+                  onValueChange={(value) => setFormData({ ...formData, role: value as AppRole })}
+                >
+                  <SelectTrigger id="add-role">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="ผู้ใช้ทั่วไป">ผู้ใช้ทั่วไป</SelectItem>
+                    <SelectItem value="บัญชี">บัญชี</SelectItem>
+                    <SelectItem value="ผู้บริหาร">ผู้บริหาร</SelectItem>
+                    <SelectItem value="แอดมิน">แอดมิน</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </div>
             <DialogFooter>
