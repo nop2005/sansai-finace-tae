@@ -41,8 +41,18 @@ export default function Auth() {
 
     try {
       if (isLogin) {
+        // Sanitize email/username เหมือนกับตอนสร้าง user
+        let emailUsername = email.toLowerCase().trim();
+        // ถ้ามี @ ให้เอาเฉพาะส่วนหน้า @
+        if (emailUsername.includes('@')) {
+          emailUsername = emailUsername.split('@')[0];
+        }
+        // เอาเฉพาะตัวอักษร ตัวเลข และ . - _
+        emailUsername = emailUsername.replace(/[^a-z0-9._-]/g, '');
+        const loginEmail = `${emailUsername}@internal.local`;
+
         const { error } = await supabase.auth.signInWithPassword({
-          email,
+          email: loginEmail,
           password,
         });
 
@@ -125,10 +135,10 @@ export default function Auth() {
               </>
             )}
             <div className="space-y-2">
-              <Label htmlFor="email">อีเมล</Label>
+              <Label htmlFor="email">{isLogin ? "ชื่อผู้ใช้" : "อีเมล"}</Label>
               <Input
                 id="email"
-                type="email"
+                type={isLogin ? "text" : "email"}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
