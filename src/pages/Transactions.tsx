@@ -132,6 +132,13 @@ export default function Transactions() {
     .filter((t) => t.type === "expense")
     .reduce((sum, t) => sum + Number(t.amount), 0);
 
+  // คำนวณผลรวมของรายการที่กรองแล้ว
+  const filteredTotal = filteredTransactions.reduce((sum, t) => {
+    return t.type === "income" 
+      ? sum + Number(t.amount) 
+      : sum - Number(t.amount);
+  }, 0);
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -332,7 +339,17 @@ export default function Transactions() {
       {/* Transactions List */}
       <Card>
         <CardHeader>
-          <CardTitle>รายการทั้งหมด ({filteredTransactions.length} รายการ)</CardTitle>
+          <div className="flex items-center justify-between">
+            <CardTitle>รายการทั้งหมด ({filteredTransactions.length} รายการ)</CardTitle>
+            <div className="text-right">
+              <p className="text-sm text-muted-foreground mb-1">ผลรวม</p>
+              <p className={`text-2xl font-bold ${
+                filteredTotal >= 0 ? "text-income" : "text-expense"
+              }`}>
+                {filteredTotal >= 0 ? "+" : ""}฿{Math.abs(filteredTotal).toLocaleString()}
+              </p>
+            </div>
+          </div>
         </CardHeader>
         <CardContent>
           {loading ? (
