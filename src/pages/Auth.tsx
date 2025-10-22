@@ -41,18 +41,19 @@ export default function Auth() {
 
     try {
       if (isLogin) {
-        // Sanitize email/username เหมือนกับตอนสร้าง user
-        let emailUsername = email.toLowerCase().trim();
-        // ถ้ามี @ ให้เอาเฉพาะส่วนหน้า @
-        if (emailUsername.includes('@')) {
-          emailUsername = emailUsername.split('@')[0];
+        // ค้นหา email จาก username ใน profiles table
+        const { data: profile, error: profileError } = await supabase
+          .from('profiles')
+          .select('email')
+          .eq('username', email)
+          .single();
+
+        if (profileError || !profile?.email) {
+          throw new Error("ไม่พบผู้ใช้งานนี้ในระบบ");
         }
-        // เอาเฉพาะตัวอักษร ตัวเลข และ . - _
-        emailUsername = emailUsername.replace(/[^a-z0-9._-]/g, '');
-        const loginEmail = `${emailUsername}@internal.local`;
 
         const { error } = await supabase.auth.signInWithPassword({
-          email: loginEmail,
+          email: profile.email,
           password,
         });
 
