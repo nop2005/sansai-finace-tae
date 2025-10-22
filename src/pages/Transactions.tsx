@@ -2,7 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Search, TrendingUp, TrendingDown, Filter, CalendarIcon, FileText, CalendarDays, FolderTree } from "lucide-react";
+import { Search, TrendingUp, TrendingDown, Filter, CalendarIcon, FileText, CalendarDays, FolderTree, ChevronDown, ChevronRight } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -126,9 +126,41 @@ export default function Transactions() {
       // Sort by category
       const categoryA = getCategoryName(a.category_id, a.type);
       const categoryB = getCategoryName(b.category_id, b.type);
-      return categoryA.localeCompare(categoryB, 'th');
+      const comparison = categoryA.localeCompare(categoryB, 'th');
+      if (comparison !== 0) return comparison;
+      // If same category, sort by date
+      return new Date(b.date).getTime() - new Date(a.date).getTime();
     }
   });
+
+  // Group by category when sorting by category
+  interface CategoryGroup {
+    categoryName: string;
+    type: string;
+    transactions: any[];
+    total: number;
+  }
+
+  const groupedByCategory = sortBy === "category" 
+    ? sortedTransactions.reduce((groups, transaction) => {
+        const categoryName = getCategoryName(transaction.category_id, transaction.type);
+        const key = `${transaction.type}-${categoryName}`;
+        
+        if (!groups[key]) {
+          groups[key] = {
+            categoryName,
+            type: transaction.type,
+            transactions: [],
+            total: 0
+          };
+        }
+        
+        groups[key].transactions.push(transaction);
+        groups[key].total += Number(transaction.amount);
+        
+        return groups;
+      }, {} as Record<string, CategoryGroup>)
+    : null;
 
   // Get categories based on selected type
   const availableCategories = filterType === "income" 
@@ -391,80 +423,186 @@ export default function Transactions() {
             </div>
           ) : (
             <div className="space-y-4">
-              {sortedTransactions.map((transaction) => {
-                const categoryName = getCategoryName(transaction.category_id, transaction.type);
-                const itemName = getItemName(transaction.item_id, transaction.type);
-                const attachmentCount = getAttachmentCount(transaction.id);
-
-                return (
-                  <div
-                    key={transaction.id}
-                    className="flex items-center justify-between p-4 rounded-lg border border-border hover:bg-accent/50 transition-colors"
-                  >
-                    <div className="flex items-center gap-4 flex-1">
-                      {/* Icon */}
-                      <div
-                        className={`p-2 rounded-lg ${
-                          transaction.type === "income"
-                            ? "bg-income/10"
-                            : "bg-expense/10"
-                        }`}
-                      >
-                        {transaction.type === "income" ? (
-                          <TrendingUp className="h-5 w-5 text-income" />
-                        ) : (
-                          <TrendingDown className="h-5 w-5 text-expense" />
-                        )}
-                      </div>
-
-                      {/* Details */}
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1 flex-wrap">
-                          <p className="font-medium">{itemName || transaction.description || "ไม่ระบุ"}</p>
-                          <Badge variant="outline" className="text-xs">
-                            {categoryName}
-                          </Badge>
-                          {attachmentCount > 0 && (
-                            <Badge variant="secondary" className="text-xs">
-                              <FileText className="h-3 w-3 mr-1" />
-                              {attachmentCount} ไฟล์
-                            </Badge>
-                          )}
+              {sortBy === "category" && groupedByCategory ? (
+                // Grouped by category view
+                (Object.values(groupedByCategory) as CategoryGroup[]).map((group) => (
+                  <div key={`${group.type}-${group.categoryName}`} className="space-y-2">
+                    {/* Category Header */}
+                    <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg border border-border">
+                      <div className="flex items-center gap-3">
+                        <div className={`p-2 rounded ${
+                          group.type === "income" ? "bg-income/10" : "bg-expense/10"
+                        }`}>
+                          <FolderTree className={`h-4 w-4 ${
+                            group.type === "income" ? "text-income" : "text-expense"
+                          }`} />
                         </div>
-                        <div className="flex items-center gap-3 text-sm text-muted-foreground flex-wrap">
-                          <span>{format(new Date(transaction.date), "d MMM yyyy", { locale: th })}</span>
-                          {transaction.reference && (
-                            <>
-                              <span>•</span>
-                              <span>{transaction.reference}</span>
-                            </>
-                          )}
-                          {transaction.description && (
-                            <>
-                              <span>•</span>
-                              <span className="truncate max-w-[200px]">{transaction.description}</span>
-                            </>
-                          )}
+                        <div>
+                          <p className="font-semibold">{group.categoryName}</p>
+                          <p className="text-sm text-muted-foreground">
+                            {group.transactions.length} รายการ
+                          </p>
                         </div>
                       </div>
-                    </div>
-
-                    {/* Amount */}
-                    <div className="text-right ml-4">
-                      <p
-                        className={`text-lg font-bold ${
-                          transaction.type === "income"
-                            ? "text-income"
-                            : "text-expense"
-                        }`}
-                      >
-                        {transaction.type === "income" ? "+" : "-"}฿
-                        {Number(transaction.amount).toLocaleString()}
+                      <p className={`text-lg font-bold ${
+                        group.type === "income" ? "text-income" : "text-expense"
+                      }`}>
+                        {group.type === "income" ? "+" : "-"}฿{group.total.toLocaleString()}
                       </p>
                     </div>
+
+                    {/* Transactions in category */}
+                    <div className="ml-6 space-y-2">
+                      {group.transactions.map((transaction) => {
+                        const itemName = getItemName(transaction.item_id, transaction.type);
+                        const attachmentCount = getAttachmentCount(transaction.id);
+
+                        return (
+                          <div
+                            key={transaction.id}
+                            className="flex items-center justify-between p-4 rounded-lg border border-border hover:bg-accent/50 transition-colors"
+                          >
+                            <div className="flex items-center gap-4 flex-1">
+                              {/* Icon */}
+                              <div
+                                className={`p-2 rounded-lg ${
+                                  transaction.type === "income"
+                                    ? "bg-income/10"
+                                    : "bg-expense/10"
+                                }`}
+                              >
+                                {transaction.type === "income" ? (
+                                  <TrendingUp className="h-5 w-5 text-income" />
+                                ) : (
+                                  <TrendingDown className="h-5 w-5 text-expense" />
+                                )}
+                              </div>
+
+                              {/* Details */}
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-2 mb-1 flex-wrap">
+                                  <p className="font-medium">{itemName || transaction.description || "ไม่ระบุ"}</p>
+                                  {attachmentCount > 0 && (
+                                    <Badge variant="secondary" className="text-xs">
+                                      <FileText className="h-3 w-3 mr-1" />
+                                      {attachmentCount} ไฟล์
+                                    </Badge>
+                                  )}
+                                </div>
+                                <div className="flex items-center gap-3 text-sm text-muted-foreground flex-wrap">
+                                  <span>{format(new Date(transaction.date), "d MMM yyyy", { locale: th })}</span>
+                                  {transaction.reference && (
+                                    <>
+                                      <span>•</span>
+                                      <span>{transaction.reference}</span>
+                                    </>
+                                  )}
+                                  {transaction.description && (
+                                    <>
+                                      <span>•</span>
+                                      <span className="truncate max-w-[200px]">{transaction.description}</span>
+                                    </>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Amount */}
+                            <div className="text-right ml-4">
+                              <p
+                                className={`text-lg font-bold ${
+                                  transaction.type === "income"
+                                    ? "text-income"
+                                    : "text-expense"
+                                }`}
+                              >
+                                {transaction.type === "income" ? "+" : "-"}฿
+                                {Number(transaction.amount).toLocaleString()}
+                              </p>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
                   </div>
-                );
-              })}
+                ))
+              ) : (
+                // Regular list view (sorted by date)
+                sortedTransactions.map((transaction) => {
+                  const categoryName = getCategoryName(transaction.category_id, transaction.type);
+                  const itemName = getItemName(transaction.item_id, transaction.type);
+                  const attachmentCount = getAttachmentCount(transaction.id);
+
+                  return (
+                    <div
+                      key={transaction.id}
+                      className="flex items-center justify-between p-4 rounded-lg border border-border hover:bg-accent/50 transition-colors"
+                    >
+                      <div className="flex items-center gap-4 flex-1">
+                        {/* Icon */}
+                        <div
+                          className={`p-2 rounded-lg ${
+                            transaction.type === "income"
+                              ? "bg-income/10"
+                              : "bg-expense/10"
+                          }`}
+                        >
+                          {transaction.type === "income" ? (
+                            <TrendingUp className="h-5 w-5 text-income" />
+                          ) : (
+                            <TrendingDown className="h-5 w-5 text-expense" />
+                          )}
+                        </div>
+
+                        {/* Details */}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-1 flex-wrap">
+                            <p className="font-medium">{itemName || transaction.description || "ไม่ระบุ"}</p>
+                            <Badge variant="outline" className="text-xs">
+                              {categoryName}
+                            </Badge>
+                            {attachmentCount > 0 && (
+                              <Badge variant="secondary" className="text-xs">
+                                <FileText className="h-3 w-3 mr-1" />
+                                {attachmentCount} ไฟล์
+                              </Badge>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-3 text-sm text-muted-foreground flex-wrap">
+                            <span>{format(new Date(transaction.date), "d MMM yyyy", { locale: th })}</span>
+                            {transaction.reference && (
+                              <>
+                                <span>•</span>
+                                <span>{transaction.reference}</span>
+                              </>
+                            )}
+                            {transaction.description && (
+                              <>
+                                <span>•</span>
+                                <span className="truncate max-w-[200px]">{transaction.description}</span>
+                              </>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Amount */}
+                      <div className="text-right ml-4">
+                        <p
+                          className={`text-lg font-bold ${
+                            transaction.type === "income"
+                              ? "text-income"
+                              : "text-expense"
+                          }`}
+                        >
+                          {transaction.type === "income" ? "+" : "-"}฿
+                          {Number(transaction.amount).toLocaleString()}
+                        </p>
+                      </div>
+                    </div>
+                  );
+                })
+              )}
             </div>
           )}
 
