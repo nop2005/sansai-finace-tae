@@ -96,6 +96,7 @@ export default function UserManagement() {
       const { data, error } = await supabase.functions.invoke('manage-users', {
         body: {
           action: 'create',
+          email: formData.email,
           username: formData.username,
           password: formData.password,
           full_name: formData.full_name,
@@ -279,13 +280,23 @@ export default function UserManagement() {
             </DialogHeader>
             <div className="grid gap-4 py-4">
               <div className="grid gap-2">
-                <Label htmlFor="add-username">ชื่อผู้ใช้ (อีเมล)</Label>
+                <Label htmlFor="add-email">อีเมล</Label>
+                <Input
+                  id="add-email"
+                  type="email"
+                  value={formData.email}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  placeholder="user@example.com"
+                  required
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="add-username">ชื่อผู้ใช้</Label>
                 <Input
                   id="add-username"
                   value={formData.username}
                   onChange={(e) => setFormData({ ...formData, username: e.target.value })}
                   placeholder="username"
-                  required
                 />
               </div>
               <div className="grid gap-2">

@@ -18,6 +18,7 @@ interface ResetPasswordRequest {
 
 interface CreateUserRequest {
   action: 'create';
+  email: string;
   username: string;
   password: string;
   full_name: string;
@@ -97,25 +98,27 @@ Deno.serve(async (req) => {
 
     // Handle different actions
     if (body.action === 'create') {
-      console.log(`Creating user: ${body.username}`);
+      console.log(`Creating user: ${body.email}`);
 
       // Enhanced input validation
+      const email = body.email?.trim() || '';
       const username = body.username?.trim() || '';
       const fullName = body.full_name?.trim() || '';
       const password = body.password || '';
 
       // Validate required fields
-      if (!username || !password) {
-        throw new Error('กรุณากรอกชื่อผู้ใช้และรหัสผ่าน');
+      if (!email || !password) {
+        throw new Error('กรุณากรอกอีเมลและรหัสผ่าน');
+      }
+
+      // Email validation
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        throw new Error('รูปแบบอีเมลไม่ถูกต้อง');
       }
 
       // Username validation
-      if (username.length < 3 || username.length > 50) {
+      if (username && (username.length < 3 || username.length > 50)) {
         throw new Error('ชื่อผู้ใช้ต้องมีความยาว 3-50 ตัวอักษร');
-      }
-
-      if (!/^[a-zA-Z0-9@._-]+$/.test(username)) {
-        throw new Error('ชื่อผู้ใช้มีรูปแบบไม่ถูกต้อง ใช้ได้เฉพาะตัวอักษร ตัวเลข @ . _ -');
       }
 
       // Full name validation
@@ -142,24 +145,13 @@ Deno.serve(async (req) => {
         throw new Error('รหัสผ่านไม่ปลอดภัย: ' + passwordErrors.join(', '));
       }
 
-      // Sanitize username to create a valid email
-      let emailUsername = username.toLowerCase();
-      if (emailUsername.includes('@')) {
-        emailUsername = emailUsername.split('@')[0];
-      }
-      emailUsername = emailUsername.replace(/[^a-z0-9._-]/g, '');
-      if (!emailUsername) {
-        emailUsername = `user${Date.now()}`;
-      }
-      const generatedEmail = `${emailUsername}@internal.local`;
-
       // Create user via admin API
       const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
-        email: generatedEmail,
+        email: email,
         password: password,
         email_confirm: true,
         user_metadata: {
-          username: username,
+          username: username || email.split('@')[0],
           full_name: fullName,
         },
       });
