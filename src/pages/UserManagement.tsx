@@ -54,7 +54,7 @@ export default function UserManagement() {
     try {
       const { data: profiles, error: profilesError } = await supabase
         .from("profiles")
-        .select("id, username, full_name");
+        .select("id, username, full_name, email");
 
       if (profilesError) throw profilesError;
 
@@ -71,7 +71,7 @@ export default function UserManagement() {
 
         return {
           id: profile.id,
-          email: profile.username, // ใช้ username แทน email
+          email: profile.email || "",
           username: profile.username,
           full_name: profile.full_name || null,
           roles: roles,
@@ -411,7 +411,7 @@ export default function UserManagement() {
           <Table>
             <TableHeader>
               <TableRow>
-                  <TableHead>ชื่อผู้ใช้</TableHead>
+                <TableHead>อีเมล์</TableHead>
                 <TableHead>ชื่อ-นามสกุล</TableHead>
                 <TableHead>สิทธิ์การใช้งาน</TableHead>
                 <TableHead className="text-right">จัดการ</TableHead>
@@ -420,7 +420,7 @@ export default function UserManagement() {
             <TableBody>
               {users.map((user) => (
                 <TableRow key={user.id}>
-                  <TableCell>{user.username}</TableCell>
+                  <TableCell>{user.email}</TableCell>
                   <TableCell>{user.full_name || "-"}</TableCell>
                   <TableCell>
                     {user.roles.length > 0 ? user.roles.join(", ") : "ไม่มีสิทธิ์"}
