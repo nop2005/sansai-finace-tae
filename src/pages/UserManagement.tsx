@@ -188,11 +188,24 @@ export default function UserManagement() {
       if (authError) throw authError;
       if (!authData.user) throw new Error("ไม่สามารถสร้างผู้ใช้ได้");
 
-      // ไม่กำหนด role เริ่มต้น - แอดมินจะกำหนดทีหลัง
+      // กำหนด role เริ่มต้นเป็น "ผู้ใช้ทั่วไป" เพื่อให้ login ได้
+      const { error: roleError } = await supabase
+        .from("user_roles")
+        .insert({
+          user_id: authData.user.id,
+          role: formData.role,
+        });
+
+      if (roleError) {
+        console.error("Error assigning role:", roleError);
+        // ถ้ากำหนด role ไม่สำเร็จ ให้ลบ user ที่สร้างไว้
+        await supabase.auth.admin.deleteUser(authData.user.id);
+        throw new Error("ไม่สามารถกำหนดสิทธิ์ให้ผู้ใช้ได้");
+      }
 
       toast({
         title: "สำเร็จ",
-        description: "เพิ่มผู้ใช้เรียบร้อยแล้ว (ยังไม่มีสิทธิ์การใช้งาน)",
+        description: `เพิ่มผู้ใช้เรียบร้อยแล้ว (สิทธิ์: ${formData.role})`,
       });
 
       setAddDialogOpen(false);
