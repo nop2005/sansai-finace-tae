@@ -11,7 +11,6 @@ export default function Auth() {
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [username, setUsername] = useState("");
   const [fullName, setFullName] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
@@ -41,27 +40,8 @@ export default function Auth() {
 
     try {
       if (isLogin) {
-        // ค้นหา email จาก username ใน profiles table
-        // รองรับทั้งกรณีที่ผู้ใช้พิมพ์ username หรือ email
-        let searchValue = email.toLowerCase().trim();
-        
-        // ถ้าพิมพ์มาเป็น email ให้ตัดเอาแค่ส่วนหน้า @ (username)
-        if (searchValue.includes('@')) {
-          searchValue = searchValue.split('@')[0];
-        }
-        
-        const { data: profile, error: profileError } = await supabase
-          .from('profiles')
-          .select('email')
-          .eq('username', searchValue)
-          .single();
-
-        if (profileError || !profile?.email) {
-          throw new Error("ไม่พบผู้ใช้งานนี้ในระบบ");
-        }
-
         const { error } = await supabase.auth.signInWithPassword({
-          email: profile.email,
+          email,
           password,
         });
 
@@ -78,7 +58,6 @@ export default function Auth() {
           options: {
             emailRedirectTo: `${window.location.origin}/`,
             data: {
-              username,
               full_name: fullName,
             },
           },
@@ -121,33 +100,21 @@ export default function Auth() {
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             {!isLogin && (
-              <>
-                <div className="space-y-2">
-                  <Label htmlFor="username">ชื่อผู้ใช้</Label>
-                  <Input
-                    id="username"
-                    type="text"
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="fullName">ชื่อ-นามสกุล</Label>
-                  <Input
-                    id="fullName"
-                    type="text"
-                    value={fullName}
-                    onChange={(e) => setFullName(e.target.value)}
-                  />
-                </div>
-              </>
+              <div className="space-y-2">
+                <Label htmlFor="fullName">ชื่อ-นามสกุล</Label>
+                <Input
+                  id="fullName"
+                  type="text"
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                />
+              </div>
             )}
             <div className="space-y-2">
-              <Label htmlFor="email">{isLogin ? "ชื่อผู้ใช้" : "อีเมล"}</Label>
+              <Label htmlFor="email">อีเมล</Label>
               <Input
                 id="email"
-                type={isLogin ? "text" : "email"}
+                type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
