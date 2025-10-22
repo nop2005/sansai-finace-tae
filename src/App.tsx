@@ -13,6 +13,7 @@ import Settings from "./pages/Settings";
 import Auth from "./pages/Auth";
 import UserManagement from "./pages/UserManagement";
 import PermissionsManagement from "./pages/PermissionsManagement";
+import PendingApproval from "./pages/PendingApproval";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -25,6 +26,7 @@ const App = () => (
       <BrowserRouter>
         <Routes>
           <Route path="/auth" element={<Auth />} />
+          <Route path="/pending-approval" element={<PendingApproval />} />
           <Route path="/" element={<Layout><Dashboard /></Layout>} />
           <Route path="/income" element={<Layout><Income /></Layout>} />
           <Route path="/expense" element={<Layout><Expense /></Layout>} />

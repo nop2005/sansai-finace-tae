@@ -40,12 +40,29 @@ export default function Auth() {
 
     try {
       if (isLogin) {
-        const { error } = await supabase.auth.signInWithPassword({
+        const { data, error } = await supabase.auth.signInWithPassword({
           email,
           password,
         });
 
         if (error) throw error;
+
+        // Check if user has a role
+        const { data: userRoles } = await supabase
+          .from("user_roles")
+          .select("role")
+          .eq("user_id", data.user.id);
+
+        if (!userRoles || userRoles.length === 0) {
+          // User has no role - redirect to pending approval page
+          toast({
+            title: "รอการอนุมัติ",
+            description: "บัญชีของคุณรอการอนุมัติจากผู้ดูแลระบบ",
+            variant: "destructive",
+          });
+          navigate("/pending-approval");
+          return;
+        }
 
         toast({
           title: "เข้าสู่ระบบสำเร็จ",
@@ -67,8 +84,11 @@ export default function Auth() {
 
         toast({
           title: "สมัครสมาชิกสำเร็จ",
-          description: "คุณสามารถเข้าสู่ระบบได้แล้ว",
+          description: "กรุณารอการอนุมัติจากผู้ดูแลระบบ",
         });
+        
+        // Switch to login mode after signup
+        setIsLogin(true);
       }
     } catch (error: any) {
       toast({

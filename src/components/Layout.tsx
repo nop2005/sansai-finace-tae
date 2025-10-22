@@ -47,18 +47,45 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       }
 
       setUser(session.user);
+      
+      // Check if user has any role
+      const { data: userRoles } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", session.user.id);
+
+      if (!userRoles || userRoles.length === 0) {
+        // User has no role - redirect to pending approval
+        navigate("/pending-approval");
+        return;
+      }
+
       await fetchUserPermissions(session.user.id);
       setLoading(false);
     };
 
     checkAuth();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (!session) {
         navigate("/auth");
       } else {
         setUser(session.user);
-        fetchUserPermissions(session.user.id);
+        
+        // Check if user has any role
+        setTimeout(async () => {
+          const { data: userRoles } = await supabase
+            .from("user_roles")
+            .select("role")
+            .eq("user_id", session.user.id);
+
+          if (!userRoles || userRoles.length === 0) {
+            navigate("/pending-approval");
+            return;
+          }
+          
+          await fetchUserPermissions(session.user.id);
+        }, 0);
       }
     });
 
