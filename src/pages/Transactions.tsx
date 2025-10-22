@@ -2,7 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Search, TrendingUp, TrendingDown, Filter, CalendarIcon, FileText } from "lucide-react";
+import { Search, TrendingUp, TrendingDown, Filter, CalendarIcon, FileText, CalendarDays, FolderTree } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -16,6 +16,7 @@ export default function Transactions() {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterType, setFilterType] = useState("all");
   const [categoryFilter, setCategoryFilter] = useState("all");
+  const [sortBy, setSortBy] = useState<"date" | "category">("date");
   const [startDate, setStartDate] = useState<Date>(startOfMonth(new Date()));
   const [endDate, setEndDate] = useState<Date>(endOfMonth(new Date()));
   const [transactions, setTransactions] = useState<any[]>([]);
@@ -117,6 +118,18 @@ export default function Transactions() {
     return matchesSearch && matchesType && matchesCategory;
   });
 
+  // Sort transactions
+  const sortedTransactions = [...filteredTransactions].sort((a, b) => {
+    if (sortBy === "date") {
+      return new Date(b.date).getTime() - new Date(a.date).getTime();
+    } else {
+      // Sort by category
+      const categoryA = getCategoryName(a.category_id, a.type);
+      const categoryB = getCategoryName(b.category_id, b.type);
+      return categoryA.localeCompare(categoryB, 'th');
+    }
+  });
+
   // Get categories based on selected type
   const availableCategories = filterType === "income" 
     ? incomeCategories 
@@ -124,16 +137,16 @@ export default function Transactions() {
     ? expenseCategories 
     : [...incomeCategories, ...expenseCategories];
 
-  const totalIncome = filteredTransactions
+  const totalIncome = sortedTransactions
     .filter((t) => t.type === "income")
     .reduce((sum, t) => sum + Number(t.amount), 0);
 
-  const totalExpense = filteredTransactions
+  const totalExpense = sortedTransactions
     .filter((t) => t.type === "expense")
     .reduce((sum, t) => sum + Number(t.amount), 0);
 
   // คำนวณผลรวมของรายการที่กรองแล้ว
-  const filteredTotal = filteredTransactions.reduce((sum, t) => {
+  const filteredTotal = sortedTransactions.reduce((sum, t) => {
     return t.type === "income" 
       ? sum + Number(t.amount) 
       : sum - Number(t.amount);
@@ -339,8 +352,28 @@ export default function Transactions() {
       {/* Transactions List */}
       <Card>
         <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle>รายการทั้งหมด ({filteredTransactions.length} รายการ)</CardTitle>
+          <div className="flex items-center justify-between gap-4 flex-wrap">
+            <CardTitle>รายการทั้งหมด ({sortedTransactions.length} รายการ)</CardTitle>
+            
+            <div className="flex items-center gap-2">
+              <Button
+                variant={sortBy === "date" ? "default" : "outline"}
+                size="sm"
+                onClick={() => setSortBy("date")}
+              >
+                <CalendarDays className="h-4 w-4 mr-2" />
+                เรียงตามวันที่
+              </Button>
+              <Button
+                variant={sortBy === "category" ? "default" : "outline"}
+                size="sm"
+                onClick={() => setSortBy("category")}
+              >
+                <FolderTree className="h-4 w-4 mr-2" />
+                เรียงตามหมวด
+              </Button>
+            </div>
+
             <div className="text-right">
               <p className="text-sm text-muted-foreground mb-1">ผลรวม</p>
               <p className={`text-2xl font-bold ${
@@ -358,7 +391,7 @@ export default function Transactions() {
             </div>
           ) : (
             <div className="space-y-4">
-              {filteredTransactions.map((transaction) => {
+              {sortedTransactions.map((transaction) => {
                 const categoryName = getCategoryName(transaction.category_id, transaction.type);
                 const itemName = getItemName(transaction.item_id, transaction.type);
                 const attachmentCount = getAttachmentCount(transaction.id);
@@ -435,7 +468,7 @@ export default function Transactions() {
             </div>
           )}
 
-          {!loading && filteredTransactions.length === 0 && (
+          {!loading && sortedTransactions.length === 0 && (
             <div className="text-center py-12 text-muted-foreground">
               <p>ไม่พบรายการที่ตรงกับการค้นหา</p>
             </div>
