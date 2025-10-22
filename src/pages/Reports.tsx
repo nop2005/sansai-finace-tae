@@ -1,0 +1,441 @@
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Download, FileText, CalendarIcon } from "lucide-react";
+import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
+import { useState, useEffect } from "react";
+import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+import { format, startOfMonth, endOfMonth, startOfYear, endOfYear, startOfQuarter, endOfQuarter, subYears } from "date-fns";
+import { th } from "date-fns/locale";
+import { cn } from "@/lib/utils";
+
+type PeriodType = "custom" | "monthly" | "quarterly" | "yearly";
+
+export default function Reports() {
+  const [periodType, setPeriodType] = useState<PeriodType>("monthly");
+  const [startDate, setStartDate] = useState<Date>(startOfMonth(new Date()));
+  const [endDate, setEndDate] = useState<Date>(endOfMonth(new Date()));
+  const [transactions, setTransactions] = useState<any[]>([]);
+  const [incomeCategories, setIncomeCategories] = useState<any[]>([]);
+  const [expenseCategories, setExpenseCategories] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchData();
+  }, [startDate, endDate]);
+
+  const fetchData = async () => {
+    setLoading(true);
+
+    // Fetch transactions
+    const { data: transactionsData } = await supabase
+      .from("transactions")
+      .select("*")
+      .gte("date", format(startDate, "yyyy-MM-dd"))
+      .lte("date", format(endDate, "yyyy-MM-dd"));
+
+    // Fetch categories
+    const { data: incomeCategoriesData } = await supabase
+      .from("income_categories")
+      .select("*");
+
+    const { data: expenseCategoriesData } = await supabase
+      .from("expense_categories")
+      .select("*");
+
+    if (transactionsData) setTransactions(transactionsData);
+    if (incomeCategoriesData) setIncomeCategories(incomeCategoriesData);
+    if (expenseCategoriesData) setExpenseCategories(expenseCategoriesData);
+
+    setLoading(false);
+  };
+
+  const handlePeriodChange = (value: PeriodType) => {
+    setPeriodType(value);
+    const now = new Date();
+    
+    switch (value) {
+      case "monthly":
+        setStartDate(startOfMonth(now));
+        setEndDate(endOfMonth(now));
+        break;
+      case "quarterly":
+        setStartDate(startOfQuarter(now));
+        setEndDate(endOfQuarter(now));
+        break;
+      case "yearly":
+        setStartDate(startOfYear(now));
+        setEndDate(endOfYear(now));
+        break;
+      case "custom":
+        // Keep current dates
+        break;
+    }
+  };
+
+  const handleDownload = (format: string) => {
+    toast.success(`กำลังดาวน์โหลดรายงานในรูปแบบ ${format.toUpperCase()}`);
+  };
+
+  // Calculate summary statistics
+  const totalIncome = transactions
+    .filter((t) => t.type === "income")
+    .reduce((sum, t) => sum + Number(t.amount), 0);
+
+  const totalExpense = transactions
+    .filter((t) => t.type === "expense")
+    .reduce((sum, t) => sum + Number(t.amount), 0);
+
+  const netProfit = totalIncome - totalExpense;
+  const profitMargin = totalIncome > 0 ? (netProfit / totalIncome) * 100 : 0;
+
+  // Generate monthly data for all 12 months of current year
+  const monthNames = ["ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.", "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค."];
+  const currentYear = new Date().getFullYear();
+
+  const monthlyComparison = monthNames.map((monthName, index) => {
+    const monthTransactions = transactions.filter((t) => {
+      const transactionDate = new Date(t.date);
+      return transactionDate.getFullYear() === currentYear && transactionDate.getMonth() === index;
+    });
+
+    const income = monthTransactions
+      .filter((t) => t.type === "income")
+      .reduce((sum, t) => sum + Number(t.amount), 0);
+
+    const expense = monthTransactions
+      .filter((t) => t.type === "expense")
+      .reduce((sum, t) => sum + Number(t.amount), 0);
+
+    const net = income - expense;
+
+    return { month: monthName, income, expense, net };
+  });
+
+  // Calculate totals for the table
+  const totalsRow = monthlyComparison.reduce(
+    (acc, row) => ({
+      income: acc.income + row.income,
+      expense: acc.expense + row.expense,
+      net: acc.net + row.net,
+    }),
+    { income: 0, expense: 0, net: 0 }
+  );
+
+  // Group by category for comparison
+  const incomeByCategory = transactions
+    .filter((t) => t.type === "income")
+    .reduce((acc, t) => {
+      const categoryId = t.category_id;
+      const category = incomeCategories.find((c) => c.id === categoryId);
+      const categoryName = category ? category.name : "ไม่ระบุหมวดหมู่";
+      
+      acc[categoryName] = (acc[categoryName] || 0) + Number(t.amount);
+      return acc;
+    }, {} as Record<string, number>);
+
+  const expenseByCategory = transactions
+    .filter((t) => t.type === "expense")
+    .reduce((acc, t) => {
+      const categoryId = t.category_id;
+      const category = expenseCategories.find((c) => c.id === categoryId);
+      const categoryName = category ? category.name : "ไม่ระบุหมวดหมู่";
+      
+      acc[categoryName] = (acc[categoryName] || 0) + Number(t.amount);
+      return acc;
+    }, {} as Record<string, number>);
+
+  // Combine for chart (showing top categories)
+  const categoryComparison = [
+    ...Object.entries(incomeByCategory).map(([category, amount]) => ({
+      category,
+      income: amount,
+      expense: 0,
+    })),
+    ...Object.entries(expenseByCategory).map(([category, amount]) => ({
+      category,
+      income: 0,
+      expense: amount,
+    })),
+  ].slice(0, 8);
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold text-foreground">รายงาน</h1>
+          <p className="text-muted-foreground mt-1">
+            รายงานสรุปและวิเคราะห์ทางการเงิน {format(startDate, "d MMM yyyy", { locale: th })} - {format(endDate, "d MMM yyyy", { locale: th })}
+          </p>
+        </div>
+
+        {/* Download Buttons */}
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={() => handleDownload("pdf")}>
+            <Download className="mr-2 h-4 w-4" />
+            PDF
+          </Button>
+          <Button variant="outline" onClick={() => handleDownload("excel")}>
+            <Download className="mr-2 h-4 w-4" />
+            Excel
+          </Button>
+        </div>
+      </div>
+
+      {/* Filters */}
+      <Card>
+        <CardContent className="pt-6">
+          <div className="flex flex-col gap-4">
+            {/* Period Type */}
+            <div className="flex flex-col sm:flex-row gap-4">
+              <Select value={periodType} onValueChange={(value) => handlePeriodChange(value as PeriodType)}>
+                <SelectTrigger className="w-full sm:w-[250px]">
+                  <FileText className="h-4 w-4 mr-2" />
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="monthly">รายเดือน</SelectItem>
+                  <SelectItem value="quarterly">รายไตรมาส</SelectItem>
+                  <SelectItem value="yearly">รายปี</SelectItem>
+                  <SelectItem value="custom">กำหนดเอง</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Custom Date Range */}
+            {periodType === "custom" && (
+              <div className="flex flex-col sm:flex-row gap-4">
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        "w-full sm:w-[200px] justify-start text-left font-normal",
+                        !startDate && "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {startDate ? format(startDate, "d MMM yyyy", { locale: th }) : <span>วันที่เริ่มต้น</span>}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={startDate}
+                      onSelect={(date) => date && setStartDate(date)}
+                      initialFocus
+                    />
+                  </PopoverContent>
+                </Popover>
+
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        "w-full sm:w-[200px] justify-start text-left font-normal",
+                        !endDate && "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {endDate ? format(endDate, "d MMM yyyy", { locale: th }) : <span>วันที่สิ้นสุด</span>}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={endDate}
+                      onSelect={(date) => date && setEndDate(date)}
+                      initialFocus
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Summary Stats */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-medium text-muted-foreground">รายรับสะสม</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-income">฿{totalIncome.toLocaleString()}</div>
+            <p className="text-xs text-muted-foreground mt-1">ช่วงเวลาที่เลือก</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-medium text-muted-foreground">รายจ่ายสะสม</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-expense">฿{totalExpense.toLocaleString()}</div>
+            <p className="text-xs text-muted-foreground mt-1">ช่วงเวลาที่เลือก</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-medium text-muted-foreground">กำไรสุทธิ</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-primary">฿{netProfit.toLocaleString()}</div>
+            <p className="text-xs text-muted-foreground mt-1">ช่วงเวลาที่เลือก</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-medium text-muted-foreground">อัตรากำไร</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{profitMargin.toFixed(1)}%</div>
+            <p className="text-xs text-muted-foreground mt-1">ช่วงเวลาที่เลือก</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Charts */}
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+        {/* Monthly Trends */}
+        <Card>
+          <CardHeader>
+            <CardTitle>แนวโน้มรายเดือน (ปีปัจจุบัน)</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={350}>
+              <LineChart data={monthlyComparison}>
+                <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
+                <XAxis dataKey="month" className="text-xs" />
+                <YAxis className="text-xs" />
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: "hsl(var(--card))",
+                    border: "1px solid hsl(var(--border))",
+                    borderRadius: "8px",
+                  }}
+                />
+                <Legend />
+                <Line
+                  type="monotone"
+                  dataKey="income"
+                  name="รายรับ"
+                  stroke="hsl(var(--income))"
+                  strokeWidth={3}
+                  dot={{ fill: "hsl(var(--income))", r: 4 }}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="expense"
+                  name="รายจ่าย"
+                  stroke="hsl(var(--expense))"
+                  strokeWidth={3}
+                  dot={{ fill: "hsl(var(--expense))", r: 4 }}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="net"
+                  name="สุทธิ"
+                  stroke="hsl(var(--primary))"
+                  strokeWidth={3}
+                  dot={{ fill: "hsl(var(--primary))", r: 4 }}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+
+        {/* Category Comparison */}
+        <Card>
+          <CardHeader>
+            <CardTitle>เปรียบเทียบตามหมวดหมู่</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={350}>
+              <BarChart data={categoryComparison}>
+                <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
+                <XAxis dataKey="category" className="text-xs" />
+                <YAxis className="text-xs" />
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: "hsl(var(--card))",
+                    border: "1px solid hsl(var(--border))",
+                    borderRadius: "8px",
+                  }}
+                />
+                <Legend />
+                <Bar dataKey="income" name="รายรับ" fill="hsl(var(--income))" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="expense" name="รายจ่าย" fill="hsl(var(--expense))" radius={[4, 4, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Detailed Table */}
+      <Card>
+        <CardHeader>
+          <CardTitle>สรุปรายละเอียดรายเดือน (ปีปัจจุบัน)</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-border">
+                  <th className="text-left py-3 px-4 font-medium">เดือน</th>
+                  <th className="text-right py-3 px-4 font-medium">รายรับ</th>
+                  <th className="text-right py-3 px-4 font-medium">รายจ่าย</th>
+                  <th className="text-right py-3 px-4 font-medium">สุทธิ</th>
+                  <th className="text-right py-3 px-4 font-medium">อัตรากำไร</th>
+                </tr>
+              </thead>
+              <tbody>
+                {monthlyComparison.map((row) => (
+                  <tr key={row.month} className="border-b border-border hover:bg-accent/50">
+                    <td className="py-3 px-4">{row.month}</td>
+                    <td className="text-right py-3 px-4 text-income font-medium">
+                      ฿{row.income.toLocaleString()}
+                    </td>
+                    <td className="text-right py-3 px-4 text-expense font-medium">
+                      ฿{row.expense.toLocaleString()}
+                    </td>
+                    <td className="text-right py-3 px-4 font-bold">
+                      ฿{row.net.toLocaleString()}
+                    </td>
+                    <td className="text-right py-3 px-4">
+                      {row.income > 0 ? ((row.net / row.income) * 100).toFixed(1) : "0.0"}%
+                    </td>
+                  </tr>
+                ))}
+                {/* Total Row */}
+                <tr className="border-t-2 border-border bg-accent/30 font-bold">
+                  <td className="py-3 px-4">รวมทั้งหมด</td>
+                  <td className="text-right py-3 px-4 text-income">
+                    ฿{totalsRow.income.toLocaleString()}
+                  </td>
+                  <td className="text-right py-3 px-4 text-expense">
+                    ฿{totalsRow.expense.toLocaleString()}
+                  </td>
+                  <td className="text-right py-3 px-4 text-primary">
+                    ฿{totalsRow.net.toLocaleString()}
+                  </td>
+                  <td className="text-right py-3 px-4">
+                    {totalsRow.income > 0 ? ((totalsRow.net / totalsRow.income) * 100).toFixed(1) : "0.0"}%
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
