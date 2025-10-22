@@ -312,6 +312,49 @@ export default function Dashboard() {
           </CardContent>
         </Card>
 
+        {/* Cumulative Trend */}
+        <Card>
+          <CardHeader>
+            <CardTitle>กระแสเงินสดสะสม</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={300}>
+              <LineChart data={cumulativeData}>
+                <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
+                <XAxis dataKey="month" className="text-xs" />
+                <YAxis className="text-xs" />
+                <Tooltip 
+                  contentStyle={{ 
+                    backgroundColor: "hsl(var(--card))", 
+                    border: "1px solid hsl(var(--border))",
+                    borderRadius: "8px"
+                  }} 
+                />
+                <Legend />
+                <Line 
+                  type="monotone" 
+                  dataKey="income" 
+                  name="รายรับสะสม" 
+                  stroke="hsl(var(--income))" 
+                  strokeWidth={3}
+                  dot={{ fill: "hsl(var(--income))", r: 5 }}
+                />
+                <Line 
+                  type="monotone" 
+                  dataKey="expense" 
+                  name="รายจ่ายสะสม" 
+                  stroke="hsl(var(--expense))" 
+                  strokeWidth={3}
+                  dot={{ fill: "hsl(var(--expense))", r: 5 }}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Charts Row 2 */}
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
         {/* Income Categories */}
         <Card>
           <CardHeader>
@@ -351,10 +394,7 @@ export default function Dashboard() {
             )}
           </CardContent>
         </Card>
-      </div>
 
-      {/* Charts Row 2 */}
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
         {/* Expense Categories */}
         <Card>
           <CardHeader>
@@ -392,46 +432,6 @@ export default function Dashboard() {
                 ไม่มีข้อมูลรายจ่าย
               </div>
             )}
-          </CardContent>
-        </Card>
-
-        {/* Cumulative Trend */}
-        <Card>
-          <CardHeader>
-            <CardTitle>กระแสเงินสดสะสม</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={cumulativeData}>
-                <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
-                <XAxis dataKey="month" className="text-xs" />
-                <YAxis className="text-xs" />
-                <Tooltip 
-                  contentStyle={{ 
-                    backgroundColor: "hsl(var(--card))", 
-                    border: "1px solid hsl(var(--border))",
-                    borderRadius: "8px"
-                  }} 
-                />
-                <Legend />
-                <Line 
-                  type="monotone" 
-                  dataKey="income" 
-                  name="รายรับสะสม" 
-                  stroke="hsl(var(--income))" 
-                  strokeWidth={3}
-                  dot={{ fill: "hsl(var(--income))", r: 5 }}
-                />
-                <Line 
-                  type="monotone" 
-                  dataKey="expense" 
-                  name="รายจ่ายสะสม" 
-                  stroke="hsl(var(--expense))" 
-                  strokeWidth={3}
-                  dot={{ fill: "hsl(var(--expense))", r: 5 }}
-                />
-              </LineChart>
-            </ResponsiveContainer>
           </CardContent>
         </Card>
       </div>
