@@ -36,6 +36,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<any>(null);
   const [allowedMenus, setAllowedMenus] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   useEffect(() => {
     // Check authentication and fetch permissions
@@ -122,15 +123,20 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const handleLogout = () => {
-    // Clear localStorage immediately
+  const handleLogout = async () => {
+    setIsLoggingOut(true);
+    
+    // Delay เล็กน้อยเพื่อให้รู้สึกเหมือนมีการประมวลผล
+    await new Promise(resolve => setTimeout(resolve, 600));
+    
+    // Clear localStorage
     localStorage.removeItem('sb-uhpopshxfkpzdsbpecyj-auth-token');
     
     // Clear state
     setUser(null);
     setAllowedMenus([]);
     
-    // Navigate smoothly without page reload
+    // Navigate to auth page
     navigate("/auth", { replace: true });
   };
 
@@ -209,10 +215,11 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               variant="ghost"
               size="sm"
               onClick={handleLogout}
+              disabled={isLoggingOut}
               className="w-full justify-start text-muted-foreground hover:text-foreground"
             >
               <LogOut className="h-4 w-4 mr-2" />
-              ออกจากระบบ
+              {isLoggingOut ? "กำลังออกจากระบบ..." : "ออกจากระบบ"}
             </Button>
           </div>
         </div>
