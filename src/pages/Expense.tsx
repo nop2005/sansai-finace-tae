@@ -48,15 +48,18 @@ export default function Expense() {
 
   // Filter items based on selected category
   const filteredItems = useMemo(() => {
-    if (!formData.category) return items; // Show all items if no category selected
+    if (!formData.category || formData.category === "all") return items; // Show all items if no category or "all" selected
     return items.filter((item: any) => item.category_id === formData.category);
   }, [items, formData.category]);
 
-  // Prepare combobox options
-  const categoryOptions: ComboboxOption[] = categories.map((cat: any) => ({
-    value: cat.id,
-    label: cat.name,
-  }));
+  // Prepare combobox options - add "All Categories" as first option
+  const categoryOptions: ComboboxOption[] = [
+    { value: "all", label: "ทุกหมวดหมู่" },
+    ...categories.map((cat: any) => ({
+      value: cat.id,
+      label: cat.name,
+    }))
+  ];
 
   const itemOptions: ComboboxOption[] = filteredItems.map((item: any) => ({
     value: item.id,
@@ -223,6 +226,12 @@ export default function Expense() {
                   placeholder="เลือกรายการ"
                   searchPlaceholder="ค้นหารายการ..."
                   emptyText="ไม่พบรายการ"
+                  onSearchStart={() => {
+                    // Auto-set category to "all" when user starts searching items
+                    if (formData.category !== "all") {
+                      setFormData({ ...formData, category: "all" });
+                    }
+                  }}
                 />
               </div>
 

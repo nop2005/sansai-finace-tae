@@ -30,6 +30,7 @@ interface ComboboxProps {
   emptyText?: string;
   className?: string;
   disabled?: boolean;
+  onSearchStart?: () => void; // Callback when user starts searching
 }
 
 export function Combobox({
@@ -41,8 +42,18 @@ export function Combobox({
   emptyText = "ไม่พบข้อมูล",
   className,
   disabled = false,
+  onSearchStart,
 }: ComboboxProps) {
   const [open, setOpen] = React.useState(false);
+  const [searchValue, setSearchValue] = React.useState("");
+
+  // Handle search value change
+  const handleSearchChange = (search: string) => {
+    setSearchValue(search);
+    if (search && onSearchStart) {
+      onSearchStart();
+    }
+  };
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -62,7 +73,11 @@ export function Combobox({
       </PopoverTrigger>
       <PopoverContent className="w-full p-0" align="start">
         <Command>
-          <CommandInput placeholder={searchPlaceholder} />
+          <CommandInput 
+            placeholder={searchPlaceholder} 
+            value={searchValue}
+            onValueChange={handleSearchChange}
+          />
           <CommandList>
             <CommandEmpty>{emptyText}</CommandEmpty>
             <CommandGroup>
