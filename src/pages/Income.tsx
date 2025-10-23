@@ -84,6 +84,9 @@ export default function Income() {
 
   const saveMutation = useMutation({
     mutationFn: async () => {
+      // Get current user
+      const { data: { user } } = await supabase.auth.getUser();
+      
       // Insert transaction
       const { data: transaction, error: transactionError } = await supabase
         .from("transactions")
@@ -96,6 +99,7 @@ export default function Income() {
             amount: parseFloat(formData.amount),
             description: formData.description,
             reference: formData.reference,
+            created_by: user?.id || null,
           },
         ])
         .select()

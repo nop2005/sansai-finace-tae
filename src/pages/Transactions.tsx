@@ -884,6 +884,26 @@ export default function Transactions() {
                 </div>
               )}
 
+              <div className="border-t pt-4">
+                <p className="font-semibold mb-3">ข้อมูลการบันทึก</p>
+                <div className="space-y-2 bg-muted/50 p-3 rounded-lg">
+                  <div>
+                    <p className="text-sm text-muted-foreground">ผู้บันทึก</p>
+                    <p className="font-medium">
+                      {selectedTransaction.created_by 
+                        ? getEditorName(selectedTransaction.created_by)
+                        : "ไม่ทราบชื่อ"}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">วันที่บันทึก</p>
+                    <p className="font-medium">
+                      {format(new Date(selectedTransaction.created_at), "d MMMM yyyy HH:mm น.", { locale: th })}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
               {selectedTransaction.edited && (
                 <>
                   <div className="border-t pt-4">

@@ -232,6 +232,7 @@ export type Database = {
           amount: number
           category_id: string | null
           created_at: string
+          created_by: string | null
           date: string
           description: string | null
           edit_reason: string | null
@@ -248,6 +249,7 @@ export type Database = {
           amount: number
           category_id?: string | null
           created_at?: string
+          created_by?: string | null
           date: string
           description?: string | null
           edit_reason?: string | null
@@ -264,6 +266,7 @@ export type Database = {
           amount?: number
           category_id?: string | null
           created_at?: string
+          created_by?: string | null
           date?: string
           description?: string | null
           edit_reason?: string | null
