@@ -234,6 +234,10 @@ export type Database = {
           created_at: string
           date: string
           description: string | null
+          edit_reason: string | null
+          edited: boolean | null
+          edited_at: string | null
+          edited_by: string | null
           id: string
           item_id: string | null
           reference: string | null
@@ -246,6 +250,10 @@ export type Database = {
           created_at?: string
           date: string
           description?: string | null
+          edit_reason?: string | null
+          edited?: boolean | null
+          edited_at?: string | null
+          edited_by?: string | null
           id?: string
           item_id?: string | null
           reference?: string | null
@@ -258,6 +266,10 @@ export type Database = {
           created_at?: string
           date?: string
           description?: string | null
+          edit_reason?: string | null
+          edited?: boolean | null
+          edited_at?: string | null
+          edited_by?: string | null
           id?: string
           item_id?: string | null
           reference?: string | null

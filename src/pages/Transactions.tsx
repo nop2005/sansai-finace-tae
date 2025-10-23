@@ -2,15 +2,19 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Search, TrendingUp, TrendingDown, Filter, CalendarIcon, FileText, CalendarDays, FolderTree, ChevronDown, ChevronRight } from "lucide-react";
+import { Search, TrendingUp, TrendingDown, Filter, CalendarIcon, FileText, CalendarDays, FolderTree, ChevronDown, ChevronRight, Edit, Eye, AlertCircle } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { format, startOfMonth, endOfMonth } from "date-fns";
 import { th } from "date-fns/locale";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 
 export default function Transactions() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -25,7 +29,17 @@ export default function Transactions() {
   const [incomeItems, setIncomeItems] = useState<any[]>([]);
   const [expenseItems, setExpenseItems] = useState<any[]>([]);
   const [attachments, setAttachments] = useState<any[]>([]);
+  const [profiles, setProfiles] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [detailDialogOpen, setDetailDialogOpen] = useState(false);
+  const [selectedTransaction, setSelectedTransaction] = useState<any>(null);
+  const [editForm, setEditForm] = useState({
+    item_id: "",
+    amount: "",
+    date: new Date(),
+    edit_reason: ""
+  });
 
   useEffect(() => {
     fetchData();
@@ -65,12 +79,18 @@ export default function Transactions() {
       .from("transaction_attachments")
       .select("*");
 
+    // Fetch profiles for editor information
+    const { data: profilesData } = await supabase
+      .from("profiles")
+      .select("*");
+
     if (transactionsData) setTransactions(transactionsData);
     if (incomeCategoriesData) setIncomeCategories(incomeCategoriesData);
     if (expenseCategoriesData) setExpenseCategories(expenseCategoriesData);
     if (incomeItemsData) setIncomeItems(incomeItemsData);
     if (expenseItemsData) setExpenseItems(expenseItemsData);
     if (attachmentsData) setAttachments(attachmentsData);
+    if (profilesData) setProfiles(profilesData);
 
     setLoading(false);
   };
@@ -97,6 +117,65 @@ export default function Transactions() {
 
   const getAttachmentCount = (transactionId: string) => {
     return attachments.filter((a) => a.transaction_id === transactionId).length;
+  };
+
+  const getEditorName = (userId: string) => {
+    const profile = profiles.find((p) => p.id === userId);
+    return profile ? profile.full_name || profile.username : "ไม่ทราบชื่อ";
+  };
+
+  const handleEdit = (transaction: any) => {
+    setSelectedTransaction(transaction);
+    setEditForm({
+      item_id: transaction.item_id || "",
+      amount: transaction.amount.toString(),
+      date: new Date(transaction.date),
+      edit_reason: ""
+    });
+    setEditDialogOpen(true);
+  };
+
+  const handleViewDetails = (transaction: any) => {
+    setSelectedTransaction(transaction);
+    setDetailDialogOpen(true);
+  };
+
+  const handleSaveEdit = async () => {
+    if (!selectedTransaction) return;
+
+    if (!editForm.edit_reason.trim()) {
+      toast.error("กรุณากรอกเหตุผลที่แก้ไข");
+      return;
+    }
+
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      toast.error("ไม่พบข้อมูลผู้ใช้");
+      return;
+    }
+
+    const { error } = await supabase
+      .from("transactions")
+      .update({
+        item_id: editForm.item_id,
+        amount: parseFloat(editForm.amount),
+        date: format(editForm.date, "yyyy-MM-dd"),
+        edited: true,
+        edit_reason: editForm.edit_reason,
+        edited_by: user.id,
+        edited_at: new Date().toISOString()
+      })
+      .eq("id", selectedTransaction.id);
+
+    if (error) {
+      toast.error("เกิดข้อผิดพลาดในการแก้ไข");
+      console.error(error);
+      return;
+    }
+
+    toast.success("แก้ไขรายการสำเร็จ");
+    setEditDialogOpen(false);
+    fetchData();
   };
 
   const filteredTransactions = transactions.filter((transaction) => {
@@ -479,16 +558,22 @@ export default function Transactions() {
                               </div>
 
                               {/* Details */}
-                              <div className="flex-1 min-w-0">
-                                <div className="flex items-center gap-2 mb-1 flex-wrap">
-                                  <p className="font-medium">{itemName || transaction.description || "ไม่ระบุ"}</p>
-                                  {attachmentCount > 0 && (
-                                    <Badge variant="secondary" className="text-xs">
-                                      <FileText className="h-3 w-3 mr-1" />
-                                      {attachmentCount} ไฟล์
-                                    </Badge>
-                                  )}
-                                </div>
+                               <div className="flex-1 min-w-0">
+                                 <div className="flex items-center gap-2 mb-1 flex-wrap">
+                                   <p className="font-medium">{itemName || transaction.description || "ไม่ระบุ"}</p>
+                                   {transaction.edited && (
+                                     <Badge variant="outline" className="text-xs border-orange-500 text-orange-500">
+                                       <AlertCircle className="h-3 w-3 mr-1" />
+                                       แก้ไขแล้ว
+                                     </Badge>
+                                   )}
+                                   {attachmentCount > 0 && (
+                                     <Badge variant="secondary" className="text-xs">
+                                       <FileText className="h-3 w-3 mr-1" />
+                                       {attachmentCount} ไฟล์
+                                     </Badge>
+                                   )}
+                                 </div>
                                 <div className="flex items-center gap-3 text-sm text-muted-foreground flex-wrap">
                                   <span>{format(new Date(transaction.date), "d MMM yyyy", { locale: th })}</span>
                                   {transaction.reference && (
@@ -507,20 +592,38 @@ export default function Transactions() {
                               </div>
                             </div>
 
-                            {/* Amount */}
-                            <div className="text-right ml-4">
-                              <p
-                                className={`text-lg font-bold ${
-                                  transaction.type === "income"
-                                    ? "text-income"
-                                    : "text-expense"
-                                }`}
-                              >
-                                {transaction.type === "income" ? "+" : "-"}฿
-                                {Number(transaction.amount).toLocaleString()}
-                              </p>
-                            </div>
-                          </div>
+                             {/* Amount and Actions */}
+                             <div className="flex items-center gap-2 ml-4">
+                               <div className="text-right">
+                                 <p
+                                   className={`text-lg font-bold ${
+                                     transaction.type === "income"
+                                       ? "text-income"
+                                       : "text-expense"
+                                   }`}
+                                 >
+                                   {transaction.type === "income" ? "+" : "-"}฿
+                                   {Number(transaction.amount).toLocaleString()}
+                                 </p>
+                               </div>
+                               <div className="flex gap-1">
+                                 <Button
+                                   size="sm"
+                                   variant="ghost"
+                                   onClick={() => handleViewDetails(transaction)}
+                                 >
+                                   <Eye className="h-4 w-4" />
+                                 </Button>
+                                 <Button
+                                   size="sm"
+                                   variant="ghost"
+                                   onClick={() => handleEdit(transaction)}
+                                 >
+                                   <Edit className="h-4 w-4" />
+                                 </Button>
+                               </div>
+                             </div>
+                           </div>
                         );
                       })}
                     </div>
@@ -554,20 +657,26 @@ export default function Transactions() {
                           )}
                         </div>
 
-                        {/* Details */}
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 mb-1 flex-wrap">
-                            <p className="font-medium">{itemName || transaction.description || "ไม่ระบุ"}</p>
-                            <Badge variant="outline" className="text-xs">
-                              {categoryName}
-                            </Badge>
-                            {attachmentCount > 0 && (
-                              <Badge variant="secondary" className="text-xs">
-                                <FileText className="h-3 w-3 mr-1" />
-                                {attachmentCount} ไฟล์
-                              </Badge>
-                            )}
-                          </div>
+                         {/* Details */}
+                         <div className="flex-1 min-w-0">
+                           <div className="flex items-center gap-2 mb-1 flex-wrap">
+                             <p className="font-medium">{itemName || transaction.description || "ไม่ระบุ"}</p>
+                             <Badge variant="outline" className="text-xs">
+                               {categoryName}
+                             </Badge>
+                             {transaction.edited && (
+                               <Badge variant="outline" className="text-xs border-orange-500 text-orange-500">
+                                 <AlertCircle className="h-3 w-3 mr-1" />
+                                 แก้ไขแล้ว
+                               </Badge>
+                             )}
+                             {attachmentCount > 0 && (
+                               <Badge variant="secondary" className="text-xs">
+                                 <FileText className="h-3 w-3 mr-1" />
+                                 {attachmentCount} ไฟล์
+                               </Badge>
+                             )}
+                           </div>
                           <div className="flex items-center gap-3 text-sm text-muted-foreground flex-wrap">
                             <span>{format(new Date(transaction.date), "d MMM yyyy", { locale: th })}</span>
                             {transaction.reference && (
@@ -586,20 +695,38 @@ export default function Transactions() {
                         </div>
                       </div>
 
-                      {/* Amount */}
-                      <div className="text-right ml-4">
-                        <p
-                          className={`text-lg font-bold ${
-                            transaction.type === "income"
-                              ? "text-income"
-                              : "text-expense"
-                          }`}
-                        >
-                          {transaction.type === "income" ? "+" : "-"}฿
-                          {Number(transaction.amount).toLocaleString()}
-                        </p>
-                      </div>
-                    </div>
+                       {/* Amount and Actions */}
+                       <div className="flex items-center gap-2 ml-4">
+                         <div className="text-right">
+                           <p
+                             className={`text-lg font-bold ${
+                               transaction.type === "income"
+                                 ? "text-income"
+                                 : "text-expense"
+                             }`}
+                           >
+                             {transaction.type === "income" ? "+" : "-"}฿
+                             {Number(transaction.amount).toLocaleString()}
+                           </p>
+                         </div>
+                         <div className="flex gap-1">
+                           <Button
+                             size="sm"
+                             variant="ghost"
+                             onClick={() => handleViewDetails(transaction)}
+                           >
+                             <Eye className="h-4 w-4" />
+                           </Button>
+                           <Button
+                             size="sm"
+                             variant="ghost"
+                             onClick={() => handleEdit(transaction)}
+                           >
+                             <Edit className="h-4 w-4" />
+                           </Button>
+                         </div>
+                       </div>
+                     </div>
                   );
                 })
               )}
@@ -613,6 +740,189 @@ export default function Transactions() {
           )}
         </CardContent>
       </Card>
+
+      {/* Edit Dialog */}
+      <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>แก้ไขรายการ</DialogTitle>
+            <DialogDescription>
+              แก้ไขข้อมูลรายการและระบุเหตุผล
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label>รายการ</Label>
+              <Select 
+                value={editForm.item_id} 
+                onValueChange={(value) => setEditForm({...editForm, item_id: value})}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="เลือกรายการ" />
+                </SelectTrigger>
+                <SelectContent>
+                  {selectedTransaction?.type === "income" 
+                    ? incomeItems.map((item) => (
+                        <SelectItem key={item.id} value={item.id}>
+                          {item.name}
+                        </SelectItem>
+                      ))
+                    : expenseItems.map((item) => (
+                        <SelectItem key={item.id} value={item.id}>
+                          {item.name}
+                        </SelectItem>
+                      ))
+                  }
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label>จำนวนเงิน</Label>
+              <Input
+                type="number"
+                value={editForm.amount}
+                onChange={(e) => setEditForm({...editForm, amount: e.target.value})}
+                placeholder="0.00"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label>วันที่</Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" className="w-full justify-start text-left font-normal">
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {format(editForm.date, "d MMM yyyy", { locale: th })}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={editForm.date}
+                    onSelect={(date) => date && setEditForm({...editForm, date})}
+                    initialFocus
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
+
+            <div className="space-y-2">
+              <Label>เหตุผลที่แก้ไข *</Label>
+              <Textarea
+                value={editForm.edit_reason}
+                onChange={(e) => setEditForm({...editForm, edit_reason: e.target.value})}
+                placeholder="ระบุเหตุผลที่แก้ไขรายการนี้..."
+                rows={3}
+              />
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditDialogOpen(false)}>
+              ยกเลิก
+            </Button>
+            <Button onClick={handleSaveEdit}>
+              บันทึก
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Detail Dialog */}
+      <Dialog open={detailDialogOpen} onOpenChange={setDetailDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>รายละเอียดรายการ</DialogTitle>
+          </DialogHeader>
+          
+          {selectedTransaction && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-sm text-muted-foreground">ประเภท</p>
+                  <p className="font-medium">
+                    {selectedTransaction.type === "income" ? "รายรับ" : "รายจ่าย"}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">จำนวนเงิน</p>
+                  <p className={`font-bold ${
+                    selectedTransaction.type === "income" ? "text-income" : "text-expense"
+                  }`}>
+                    ฿{Number(selectedTransaction.amount).toLocaleString()}
+                  </p>
+                </div>
+              </div>
+
+              <div>
+                <p className="text-sm text-muted-foreground">รายการ</p>
+                <p className="font-medium">
+                  {getItemName(selectedTransaction.item_id, selectedTransaction.type)}
+                </p>
+              </div>
+
+              <div>
+                <p className="text-sm text-muted-foreground">หมวดหมู่</p>
+                <p className="font-medium">
+                  {getCategoryName(selectedTransaction.category_id, selectedTransaction.type)}
+                </p>
+              </div>
+
+              <div>
+                <p className="text-sm text-muted-foreground">วันที่</p>
+                <p className="font-medium">
+                  {format(new Date(selectedTransaction.date), "d MMMM yyyy", { locale: th })}
+                </p>
+              </div>
+
+              {selectedTransaction.description && (
+                <div>
+                  <p className="text-sm text-muted-foreground">คำอธิบาย</p>
+                  <p className="font-medium">{selectedTransaction.description}</p>
+                </div>
+              )}
+
+              {selectedTransaction.edited && (
+                <>
+                  <div className="border-t pt-4">
+                    <div className="flex items-center gap-2 mb-3">
+                      <AlertCircle className="h-4 w-4 text-orange-500" />
+                      <p className="font-semibold text-orange-500">ประวัติการแก้ไข</p>
+                    </div>
+                    
+                    <div className="space-y-2 bg-muted/50 p-3 rounded-lg">
+                      <div>
+                        <p className="text-sm text-muted-foreground">ผู้แก้ไข</p>
+                        <p className="font-medium">
+                          {getEditorName(selectedTransaction.edited_by)}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-muted-foreground">วันที่แก้ไข</p>
+                        <p className="font-medium">
+                          {format(new Date(selectedTransaction.edited_at), "d MMMM yyyy HH:mm น.", { locale: th })}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-muted-foreground">เหตุผล</p>
+                        <p className="font-medium">{selectedTransaction.edit_reason}</p>
+                      </div>
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+          )}
+
+          <DialogFooter>
+            <Button onClick={() => setDetailDialogOpen(false)}>
+              ปิด
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
