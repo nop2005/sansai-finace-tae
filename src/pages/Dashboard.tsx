@@ -3,7 +3,7 @@ import { TrendingUp, TrendingDown, Wallet, Activity, CalendarIcon } from "lucide
 import { BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { format, startOfMonth, endOfMonth, startOfYear, endOfYear } from "date-fns";
+import { format, startOfMonth, endOfMonth, startOfYear, endOfYear, getDaysInMonth, eachDayOfInterval } from "date-fns";
 import { th } from "date-fns/locale";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -189,6 +189,29 @@ export default function Dashboard() {
     };
   });
 
+  // Generate daily data based on date range
+  const dailyData = eachDayOfInterval({ start: startDate, end: endDate }).map((date) => {
+    const dayTransactions = transactions.filter((t) => {
+      const transactionDate = new Date(t.date);
+      return format(transactionDate, "yyyy-MM-dd") === format(date, "yyyy-MM-dd");
+    });
+
+    const income = dayTransactions
+      .filter((t) => t.type === "income")
+      .reduce((sum, t) => sum + Number(t.amount), 0);
+
+    const expense = dayTransactions
+      .filter((t) => t.type === "expense")
+      .reduce((sum, t) => sum + Number(t.amount), 0);
+
+    return { 
+      day: format(date, "d"), 
+      fullDate: format(date, "yyyy-MM-dd"),
+      income, 
+      expense 
+    };
+  });
+
   return (
     <div className="space-y-6">
       {/* Header with Date Range Picker */}
@@ -283,6 +306,42 @@ export default function Dashboard() {
           </Card>
         ))}
       </div>
+
+      {/* Daily Trend Chart */}
+      <Card>
+        <CardHeader>
+          <CardTitle>แนวโน้มรายรับ-รายจ่ายรายเดือน</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ResponsiveContainer width="100%" height={300}>
+            <BarChart data={dailyData}>
+              <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
+              <XAxis 
+                dataKey="day" 
+                className="text-xs"
+                label={{ value: 'วันที่', position: 'insideBottom', offset: -5 }}
+              />
+              <YAxis className="text-xs" />
+              <Tooltip 
+                contentStyle={{ 
+                  backgroundColor: "hsl(var(--card))", 
+                  border: "1px solid hsl(var(--border))",
+                  borderRadius: "8px"
+                }}
+                labelFormatter={(value, payload) => {
+                  if (payload && payload.length > 0) {
+                    return `วันที่ ${payload[0].payload.fullDate}`;
+                  }
+                  return `วันที่ ${value}`;
+                }}
+              />
+              <Legend />
+              <Bar dataKey="income" name="รายรับ" fill="hsl(var(--income))" radius={[8, 8, 0, 0]} />
+              <Bar dataKey="expense" name="รายจ่าย" fill="hsl(var(--expense))" radius={[8, 8, 0, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        </CardContent>
+      </Card>
 
       {/* Charts Row 1 */}
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
