@@ -133,7 +133,7 @@ export default function Auth() {
           <div className="mb-10">
             <h2 className="text-[28px] font-semibold text-[#2d3748] mb-2">ระบบบัญชีรับจ่าย</h2>
             <p className="text-base text-muted-foreground">
-              {isLogin ? "เข้าสู่ระบบเพื่อจัดการข้อมูลทางการเงิน" : "สมัครสมาชิกเพื่อเข้าใช้งานระบบ"}
+              {isLogin ? "เข้าสู่ระบบเพื่อบันทึกข้อมูล" : "สมัครสมาชิกเพื่อเข้าใช้งานระบบ"}
             </p>
           </div>
 
