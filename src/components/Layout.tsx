@@ -122,16 +122,16 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const handleLogout = async () => {
-    // Clear local session immediately
+  const handleLogout = () => {
+    // Clear all Supabase auth data from localStorage
+    localStorage.removeItem('sb-uhpopshxfkpzdsbpecyj-auth-token');
+    
+    // Clear component state
     setUser(null);
     setAllowedMenus([]);
     
-    // Sign out locally (doesn't require server validation)
-    await supabase.auth.signOut({ scope: 'local' });
-    
-    // Navigate to auth page
-    navigate("/auth");
+    // Force navigation to auth page
+    window.location.href = '/auth';
   };
 
   const navigation = allNavigation.filter((item) => 
