@@ -3,8 +3,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useState } from "react";
+import { Combobox, ComboboxOption } from "@/components/ui/combobox";
+import { useState, useMemo } from "react";
 import { toast } from "sonner";
 import { TrendingUp, Upload, X } from "lucide-react";
 import { useQuery, useMutation } from "@tanstack/react-query";
@@ -45,6 +45,39 @@ export default function Income() {
       return data;
     },
   });
+
+  // Filter items based on selected category
+  const filteredItems = useMemo(() => {
+    if (!formData.category) return items;
+    return items.filter((item: any) => item.category_id === formData.category);
+  }, [items, formData.category]);
+
+  // Prepare combobox options
+  const categoryOptions: ComboboxOption[] = categories.map((cat: any) => ({
+    value: cat.id,
+    label: cat.name,
+  }));
+
+  const itemOptions: ComboboxOption[] = filteredItems.map((item: any) => ({
+    value: item.id,
+    label: item.name,
+  }));
+
+  // Handler for category change
+  const handleCategoryChange = (categoryId: string) => {
+    setFormData({ ...formData, category: categoryId, item: "" });
+  };
+
+  // Handler for item change
+  const handleItemChange = (itemId: string) => {
+    const selectedItem = items.find((item: any) => item.id === itemId);
+    if (selectedItem && selectedItem.category_id) {
+      // Auto-update category based on selected item
+      setFormData({ ...formData, item: itemId, category: selectedItem.category_id });
+    } else {
+      setFormData({ ...formData, item: itemId });
+    }
+  };
 
   const saveMutation = useMutation({
     mutationFn: async () => {
@@ -170,42 +203,28 @@ export default function Income() {
               {/* Category */}
               <div className="space-y-2">
                 <Label htmlFor="category">หมวดหมู่ *</Label>
-                <Select
+                <Combobox
+                  options={categoryOptions}
                   value={formData.category}
-                  onValueChange={(value) => setFormData({ ...formData, category: value })}
-                  required
-                >
-                  <SelectTrigger id="category">
-                    <SelectValue placeholder="เลือกหมวดหมู่" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {categories.map((category: any) => (
-                      <SelectItem key={category.id} value={category.id}>
-                        {category.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                  onValueChange={handleCategoryChange}
+                  placeholder="เลือกหมวดหมู่"
+                  searchPlaceholder="ค้นหาหมวดหมู่..."
+                  emptyText="ไม่พบหมวดหมู่"
+                />
               </div>
 
               {/* Item */}
               <div className="space-y-2">
                 <Label htmlFor="item">รายการรายรับ</Label>
-                <Select
+                <Combobox
+                  options={itemOptions}
                   value={formData.item}
-                  onValueChange={(value) => setFormData({ ...formData, item: value })}
-                >
-                  <SelectTrigger id="item">
-                    <SelectValue placeholder="เลือกรายการ (ถ้ามี)" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {items.map((item: any) => (
-                      <SelectItem key={item.id} value={item.id}>
-                        {item.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                  onValueChange={handleItemChange}
+                  placeholder="เลือกรายการ (ถ้ามี)"
+                  searchPlaceholder="ค้นหารายการ..."
+                  emptyText={formData.category ? "ไม่พบรายการในหมวดหมู่นี้" : "กรุณาเลือกหมวดหมู่ก่อน"}
+                  disabled={!formData.category}
+                />
               </div>
 
               {/* Amount */}
