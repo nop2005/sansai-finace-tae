@@ -16,6 +16,7 @@ import { cn } from "@/lib/utils";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
+import hospitalLogo from "@/assets/hospital-logo-nav.png";
 
 const allNavigation = [
   { name: "แดชบอร์ด", href: "/", icon: LayoutDashboard },
@@ -160,10 +161,8 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         <div className="flex flex-col h-full p-4">
           {/* Logo */}
           <div className="flex items-center gap-3 mb-8 px-2">
-            <div className="w-12 h-12 rounded-full bg-primary flex items-center justify-center">
-              <svg className="w-7 h-7 text-primary-foreground" fill="none" viewBox="0 0 48 48">
-                <path d="M4 4H17.3334V17.3334H30.6666V30.6666H44V44H4V4Z" fill="currentColor" />
-              </svg>
+            <div className="w-12 h-12 rounded-full bg-white flex items-center justify-center overflow-hidden">
+              <img src={hospitalLogo} alt="Hospital Logo" className="w-full h-full object-cover rounded-full" />
             </div>
             <div>
               <h1 className="text-lg font-bold text-sidebar-foreground">โรงพยาบาลสันทราย</h1>
