@@ -105,10 +105,10 @@ export default function Auth() {
       setLoading(false);
     }
   };
-  return <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-[#667eea] to-[#764ba2]">
-      <div className="flex bg-background rounded-[20px] shadow-[0_20px_60px_rgba(0,0,0,0.3)] overflow-hidden max-w-[1000px] w-full">
-        {/* Left Panel */}
-        <div className="flex-1 bg-gradient-to-br from-[#4facfe] to-[#00f2fe] p-[60px_40px] flex flex-col justify-center items-center text-white relative overflow-hidden">
+  return <div className="min-h-screen flex items-center justify-center p-3 sm:p-4 bg-gradient-to-br from-[#667eea] to-[#764ba2]">
+      <div className="flex flex-col md:flex-row bg-background rounded-[20px] shadow-[0_20px_60px_rgba(0,0,0,0.3)] overflow-hidden max-w-[1000px] w-full">
+        {/* Left Panel - Hidden on mobile */}
+        <div className="hidden md:flex md:flex-1 bg-gradient-to-br from-[#4facfe] to-[#00f2fe] p-[60px_40px] flex-col justify-center items-center text-white relative overflow-hidden">
           {/* Background decorations */}
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_30%,rgba(255,255,255,0.1)_0%,transparent_50%),radial-gradient(circle_at_80%_70%,rgba(255,255,255,0.1)_0%,transparent_50%)] z-0" />
           
@@ -128,35 +128,44 @@ export default function Auth() {
           </div>
         </div>
 
-        {/* Right Panel */}
-        <div className="flex-1 p-[60px_50px] flex flex-col justify-center">
-          <div className="mb-10">
-            <h2 className="text-[28px] font-semibold text-[#2d3748] mb-2">ระบบบัญชีรับจ่าย</h2>
-            <p className="text-base text-muted-foreground">
+        {/* Right Panel - Full width on mobile */}
+        <div className="flex-1 p-6 sm:p-8 md:p-[60px_50px] flex flex-col justify-center">
+          {/* Mobile Logo - Show only on mobile */}
+          <div className="flex md:hidden flex-col items-center mb-8">
+            <div className="w-24 h-24 bg-white rounded-full flex items-center justify-center shadow-lg overflow-hidden mb-4">
+              <img src={hospitalLogo} alt="Hospital Logo" className="w-full h-full object-cover rounded-full" />
+            </div>
+            <h1 className="text-xl font-bold text-[#2d3748] mb-1">โรงพยาบาลสันทราย</h1>
+            <p className="text-sm text-muted-foreground">Sansai Hospital</p>
+          </div>
+
+          <div className="mb-6 sm:mb-10">
+            <h2 className="text-2xl sm:text-[28px] font-semibold text-[#2d3748] mb-2">ระบบบัญชีรับจ่าย</h2>
+            <p className="text-sm sm:text-base text-muted-foreground">
               {isLogin ? "เข้าสู่ระบบเพื่อบันทึกข้อมูล" : "สมัครสมาชิกเพื่อเข้าใช้งานระบบ"}
             </p>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-5 sm:space-y-6">
             {!isLogin && <div className="space-y-2">
-                <Label htmlFor="fullName" className="text-[15px] font-medium text-[#4a5568]">ชื่อ-นามสกุล</Label>
-                <Input id="fullName" type="text" value={fullName} onChange={e => setFullName(e.target.value)} className="h-12 px-[18px] text-[15px] border-2 border-[#e2e8f0] rounded-[10px] bg-[#f7fafc] focus:border-[#4facfe] focus:bg-white focus:ring-[3px] focus:ring-[rgba(79,172,254,0.1)]" placeholder="กรุณากรอกชื่อ-นามสกุล" />
+                <Label htmlFor="fullName" className="text-sm sm:text-[15px] font-medium text-[#4a5568]">ชื่อ-นามสกุล</Label>
+                <Input id="fullName" type="text" value={fullName} onChange={e => setFullName(e.target.value)} className="h-12 sm:h-14 px-4 sm:px-[18px] text-base sm:text-[15px] border-2 border-[#e2e8f0] rounded-[10px] bg-[#f7fafc] focus:border-[#4facfe] focus:bg-white focus:ring-[3px] focus:ring-[rgba(79,172,254,0.1)]" placeholder="กรุณากรอกชื่อ-นามสกุล" />
               </div>}
             <div className="space-y-2">
-              <Label htmlFor="email" className="text-[15px] font-medium text-[#4a5568]">อีเมล</Label>
-              <Input id="email" type="email" value={email} onChange={e => setEmail(e.target.value)} required className="h-12 px-[18px] text-[15px] border-2 border-[#e2e8f0] rounded-[10px] bg-[#f7fafc] focus:border-[#4facfe] focus:bg-white focus:ring-[3px] focus:ring-[rgba(79,172,254,0.1)]" placeholder="กรุณากรอกอีเมลของคุณ" />
+              <Label htmlFor="email" className="text-sm sm:text-[15px] font-medium text-[#4a5568]">อีเมล</Label>
+              <Input id="email" type="email" value={email} onChange={e => setEmail(e.target.value)} required className="h-12 sm:h-14 px-4 sm:px-[18px] text-base sm:text-[15px] border-2 border-[#e2e8f0] rounded-[10px] bg-[#f7fafc] focus:border-[#4facfe] focus:bg-white focus:ring-[3px] focus:ring-[rgba(79,172,254,0.1)]" placeholder="กรุณากรอกอีเมลของคุณ" />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password" className="text-[15px] font-medium text-[#4a5568]">รหัสผ่าน</Label>
-              <Input id="password" type="password" value={password} onChange={e => setPassword(e.target.value)} required className="h-12 px-[18px] text-[15px] border-2 border-[#e2e8f0] rounded-[10px] bg-[#f7fafc] focus:border-[#4facfe] focus:bg-white focus:ring-[3px] focus:ring-[rgba(79,172,254,0.1)]" placeholder="กรุณากรอกรหัสผ่าน" />
+              <Label htmlFor="password" className="text-sm sm:text-[15px] font-medium text-[#4a5568]">รหัสผ่าน</Label>
+              <Input id="password" type="password" value={password} onChange={e => setPassword(e.target.value)} required className="h-12 sm:h-14 px-4 sm:px-[18px] text-base sm:text-[15px] border-2 border-[#e2e8f0] rounded-[10px] bg-[#f7fafc] focus:border-[#4facfe] focus:bg-white focus:ring-[3px] focus:ring-[rgba(79,172,254,0.1)]" placeholder="กรุณากรอกรหัสผ่าน" />
             </div>
-            <Button type="submit" className="w-full h-14 bg-gradient-to-r from-[#4facfe] to-[#00f2fe] text-white rounded-[10px] text-[17px] font-semibold shadow-[0_4px_15px_rgba(79,172,254,0.4)] hover:shadow-[0_6px_20px_rgba(79,172,254,0.5)] hover:-translate-y-0.5 transition-all duration-300 mt-2.5" disabled={loading}>
+            <Button type="submit" className="w-full h-12 sm:h-14 bg-gradient-to-r from-[#4facfe] to-[#00f2fe] text-white rounded-[10px] text-base sm:text-[17px] font-semibold shadow-[0_4px_15px_rgba(79,172,254,0.4)] hover:shadow-[0_6px_20px_rgba(79,172,254,0.5)] hover:-translate-y-0.5 transition-all duration-300 mt-2.5" disabled={loading}>
               {loading ? "กำลังดำเนินการ..." : isLogin ? "เข้าสู่ระบบ" : "สมัครสมาชิก"}
             </Button>
           </form>
           
           <div className="text-center mt-6">
-            <button type="button" onClick={() => setIsLogin(!isLogin)} className="text-[15px] text-[#4facfe] font-medium hover:text-[#3b8fd9] transition-colors duration-300 hover:underline">
+            <button type="button" onClick={() => setIsLogin(!isLogin)} className="text-sm sm:text-[15px] text-[#4facfe] font-medium hover:text-[#3b8fd9] transition-colors duration-300 hover:underline">
               {isLogin ? "ยังไม่มีบัญชี? สมัครสมาชิก" : "มีบัญชีแล้ว? เข้าสู่ระบบ"}
             </button>
           </div>
