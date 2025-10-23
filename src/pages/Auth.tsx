@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
+import hospitalLogo from "@/assets/hospital-logo.png";
 
 export default function Auth() {
   const [isLogin, setIsLogin] = useState(true);
@@ -109,51 +110,16 @@ export default function Auth() {
           {/* Background decorations */}
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_30%,rgba(255,255,255,0.1)_0%,transparent_50%),radial-gradient(circle_at_80%_70%,rgba(255,255,255,0.1)_0%,transparent_50%)] z-0" />
           
-          {/* Floating Coins */}
-          <div className="absolute top-[10%] left-[8%] w-20 h-20 bg-gradient-to-br from-[#ffd700] to-[#ffed4e] rounded-full shadow-[0_8px_20px_rgba(255,215,0,0.6),inset_0_-3px_8px_rgba(0,0,0,0.3)] border-[3px] border-[#ffed4e] animate-[float_6s_ease-in-out_infinite] before:content-[''] before:absolute before:top-[15%] before:left-[20%] before:w-[40%] before:h-[30%] before:bg-[radial-gradient(ellipse,rgba(255,255,255,0.8),transparent)] before:rounded-full after:content-['฿'] after:absolute after:top-1/2 after:left-1/2 after:-translate-x-1/2 after:-translate-y-1/2 after:text-[42px] after:font-bold after:text-[#cc8800] after:drop-shadow-[1px_1px_2px_rgba(0,0,0,0.3)]" />
-          <div className="absolute top-[55%] left-[12%] w-[65px] h-[65px] bg-gradient-to-br from-[#ffd700] to-[#ffed4e] rounded-full shadow-[0_8px_20px_rgba(255,215,0,0.6),inset_0_-3px_8px_rgba(0,0,0,0.3)] border-[3px] border-[#ffed4e] animate-[float_7s_ease-in-out_infinite_1s] before:content-[''] before:absolute before:top-[15%] before:left-[20%] before:w-[40%] before:h-[30%] before:bg-[radial-gradient(ellipse,rgba(255,255,255,0.8),transparent)] before:rounded-full after:content-['฿'] after:absolute after:top-1/2 after:left-1/2 after:-translate-x-1/2 after:-translate-y-1/2 after:text-[36px] after:font-bold after:text-[#cc8800] after:drop-shadow-[1px_1px_2px_rgba(0,0,0,0.3)]" />
-          <div className="absolute top-[25%] right-[10%] w-[70px] h-[70px] bg-gradient-to-br from-[#ffd700] to-[#ffed4e] rounded-full shadow-[0_8px_20px_rgba(255,215,0,0.6),inset_0_-3px_8px_rgba(0,0,0,0.3)] border-[3px] border-[#ffed4e] animate-[float_8s_ease-in-out_infinite_2s] before:content-[''] before:absolute before:top-[15%] before:left-[20%] before:w-[40%] before:h-[30%] before:bg-[radial-gradient(ellipse,rgba(255,255,255,0.8),transparent)] before:rounded-full after:content-['฿'] after:absolute after:top-1/2 after:left-1/2 after:-translate-x-1/2 after:-translate-y-1/2 after:text-[36px] after:font-bold after:text-[#cc8800] after:drop-shadow-[1px_1px_2px_rgba(0,0,0,0.3)]" />
-          <div className="absolute bottom-[15%] right-[8%] w-20 h-20 bg-gradient-to-br from-[#ffd700] to-[#ffed4e] rounded-full shadow-[0_8px_20px_rgba(255,215,0,0.6),inset_0_-3px_8px_rgba(0,0,0,0.3)] border-[3px] border-[#ffed4e] animate-[float_6.5s_ease-in-out_infinite_1.5s] before:content-[''] before:absolute before:top-[15%] before:left-[20%] before:w-[40%] before:h-[30%] before:bg-[radial-gradient(ellipse,rgba(255,255,255,0.8),transparent)] before:rounded-full after:content-['฿'] after:absolute after:top-1/2 after:left-1/2 after:-translate-x-1/2 after:-translate-y-1/2 after:text-[42px] after:font-bold after:text-[#cc8800] after:drop-shadow-[1px_1px_2px_rgba(0,0,0,0.3)]" />
-          
-          {/* Chart SVG */}
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[280px] h-[180px] opacity-35">
-            <svg viewBox="0 0 280 180" className="w-full h-full drop-shadow-[0_4px_8px_rgba(0,0,0,0.2)]">
-              <defs>
-                <linearGradient id="lineGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                  <stop offset="0%" stopColor="#ffffff" stopOpacity="0.6" />
-                  <stop offset="100%" stopColor="#ffffff" stopOpacity="1" />
-                </linearGradient>
-                <linearGradient id="areaGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-                  <stop offset="0%" stopColor="#ffffff" stopOpacity="0.4" />
-                  <stop offset="100%" stopColor="#ffffff" stopOpacity="0.05" />
-                </linearGradient>
-              </defs>
-              <line x1="20" y1="140" x2="260" y2="140" stroke="rgba(255,255,255,0.3)" strokeWidth="1" strokeDasharray="5,5"/>
-              <line x1="20" y1="100" x2="260" y2="100" stroke="rgba(255,255,255,0.3)" strokeWidth="1" strokeDasharray="5,5"/>
-              <line x1="20" y1="60" x2="260" y2="60" stroke="rgba(255,255,255,0.3)" strokeWidth="1" strokeDasharray="5,5"/>
-              <path d="M20,150 L60,120 L100,110 L140,70 L180,50 L220,25 L260,20 L260,160 L20,160 Z" fill="url(#areaGradient)"/>
-              <polyline points="20,150 60,120 100,110 140,70 180,50 220,25 260,20" stroke="url(#lineGradient)" strokeWidth="5" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
-              <circle cx="20" cy="150" r="6" fill="white" opacity="0.9"/>
-              <circle cx="60" cy="120" r="6" fill="white" opacity="0.9"/>
-              <circle cx="100" cy="110" r="6" fill="white" opacity="0.9"/>
-              <circle cx="140" cy="70" r="6" fill="white" opacity="0.9"/>
-              <circle cx="180" cy="50" r="6" fill="white" opacity="0.9"/>
-              <circle cx="220" cy="25" r="6" fill="white" opacity="0.9"/>
-              <circle cx="260" cy="20" r="7" fill="white" opacity="1">
-                <animate attributeName="r" values="7;9;7" dur="2s" repeatCount="indefinite"/>
-              </circle>
-              <path d="M255,15 L260,5 L265,15" stroke="white" strokeWidth="3" fill="none" strokeLinecap="round"/>
-            </svg>
-          </div>
+          {/* Floating Coins - More Transparent */}
+          <div className="absolute top-[10%] left-[8%] w-20 h-20 bg-gradient-to-br from-[#ffd700] to-[#ffed4e] rounded-full shadow-[0_8px_20px_rgba(255,215,0,0.2),inset_0_-3px_8px_rgba(0,0,0,0.15)] border-[3px] border-[#ffed4e] animate-[float_6s_ease-in-out_infinite] opacity-30 before:content-[''] before:absolute before:top-[15%] before:left-[20%] before:w-[40%] before:h-[30%] before:bg-[radial-gradient(ellipse,rgba(255,255,255,0.8),transparent)] before:rounded-full after:content-['฿'] after:absolute after:top-1/2 after:left-1/2 after:-translate-x-1/2 after:-translate-y-1/2 after:text-[42px] after:font-bold after:text-[#cc8800] after:drop-shadow-[1px_1px_2px_rgba(0,0,0,0.3)]" />
+          <div className="absolute top-[55%] left-[12%] w-[65px] h-[65px] bg-gradient-to-br from-[#ffd700] to-[#ffed4e] rounded-full shadow-[0_8px_20px_rgba(255,215,0,0.2),inset_0_-3px_8px_rgba(0,0,0,0.15)] border-[3px] border-[#ffed4e] animate-[float_7s_ease-in-out_infinite_1s] opacity-30 before:content-[''] before:absolute before:top-[15%] before:left-[20%] before:w-[40%] before:h-[30%] before:bg-[radial-gradient(ellipse,rgba(255,255,255,0.8),transparent)] before:rounded-full after:content-['฿'] after:absolute after:top-1/2 after:left-1/2 after:-translate-x-1/2 after:-translate-y-1/2 after:text-[36px] after:font-bold after:text-[#cc8800] after:drop-shadow-[1px_1px_2px_rgba(0,0,0,0.3)]" />
+          <div className="absolute top-[25%] right-[10%] w-[70px] h-[70px] bg-gradient-to-br from-[#ffd700] to-[#ffed4e] rounded-full shadow-[0_8px_20px_rgba(255,215,0,0.2),inset_0_-3px_8px_rgba(0,0,0,0.15)] border-[3px] border-[#ffed4e] animate-[float_8s_ease-in-out_infinite_2s] opacity-30 before:content-[''] before:absolute before:top-[15%] before:left-[20%] before:w-[40%] before:h-[30%] before:bg-[radial-gradient(ellipse,rgba(255,255,255,0.8),transparent)] before:rounded-full after:content-['฿'] after:absolute after:top-1/2 after:left-1/2 after:-translate-x-1/2 after:-translate-y-1/2 after:text-[36px] after:font-bold after:text-[#cc8800] after:drop-shadow-[1px_1px_2px_rgba(0,0,0,0.3)]" />
+          <div className="absolute bottom-[15%] right-[8%] w-20 h-20 bg-gradient-to-br from-[#ffd700] to-[#ffed4e] rounded-full shadow-[0_8px_20px_rgba(255,215,0,0.2),inset_0_-3px_8px_rgba(0,0,0,0.15)] border-[3px] border-[#ffed4e] animate-[float_6.5s_ease-in-out_infinite_1.5s] opacity-30 before:content-[''] before:absolute before:top-[15%] before:left-[20%] before:w-[40%] before:h-[30%] before:bg-[radial-gradient(ellipse,rgba(255,255,255,0.8),transparent)] before:rounded-full after:content-['฿'] after:absolute after:top-1/2 after:left-1/2 after:-translate-x-1/2 after:-translate-y-1/2 after:text-[42px] after:font-bold after:text-[#cc8800] after:drop-shadow-[1px_1px_2px_rgba(0,0,0,0.3)]" />
 
           {/* Logo Section */}
           <div className="text-center z-[2] relative">
-            <div className="w-[140px] h-[140px] bg-white rounded-full flex items-center justify-center mx-auto mb-6 shadow-[0_10px_30px_rgba(0,0,0,0.2)] p-5">
-              <svg viewBox="0 0 200 200" className="w-[85%] h-[85%]">
-                <rect x="75" y="50" width="50" height="100" fill="#00a651" rx="5"/>
-                <rect x="50" y="75" width="100" height="50" fill="#00a651" rx="5"/>
-                <path d="M100 140 C80 120, 70 110, 70 95 C70 80, 80 70, 95 70 C100 70, 105 75, 100 80 C95 75, 100 70, 105 70 C120 70, 130 80, 130 95 C130 110, 120 120, 100 140 Z" fill="#ed1c24"/>
-              </svg>
+            <div className="w-[180px] h-[180px] bg-white rounded-full flex items-center justify-center mx-auto mb-6 shadow-[0_10px_30px_rgba(0,0,0,0.2)] p-6">
+              <img src={hospitalLogo} alt="Sansai Hospital Logo" className="w-full h-full object-contain" />
             </div>
             <h1 className="text-[32px] font-bold mb-2 drop-shadow-[0_2px_10px_rgba(0,0,0,0.2)] z-[2]">โรงพยาบาลสันทราย</h1>
             <p className="text-lg font-normal opacity-95 z-[2]">Sansai Hospital</p>
