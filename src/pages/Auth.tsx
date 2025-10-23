@@ -7,7 +7,6 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import hospitalLogo from "@/assets/hospital-logo.png";
-
 export default function Auth() {
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState("");
@@ -15,79 +14,84 @@ export default function Auth() {
   const [fullName, setFullName] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-  const { toast } = useToast();
-
+  const {
+    toast
+  } = useToast();
   useEffect(() => {
     // Check if user is already logged in
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(({
+      data: {
+        session
+      }
+    }) => {
       if (session) {
         navigate("/");
       }
     });
 
     // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+    const {
+      data: {
+        subscription
+      }
+    } = supabase.auth.onAuthStateChange((event, session) => {
       if (session) {
         navigate("/");
       }
     });
-
     return () => subscription.unsubscribe();
   }, [navigate]);
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-
     try {
       if (isLogin) {
-        const { data, error } = await supabase.auth.signInWithPassword({
+        const {
+          data,
+          error
+        } = await supabase.auth.signInWithPassword({
           email,
-          password,
+          password
         });
-
         if (error) throw error;
 
         // Check if user has a role
-        const { data: userRoles } = await supabase
-          .from("user_roles")
-          .select("role")
-          .eq("user_id", data.user.id);
-
+        const {
+          data: userRoles
+        } = await supabase.from("user_roles").select("role").eq("user_id", data.user.id);
         if (!userRoles || userRoles.length === 0) {
           // User has no role - redirect to pending approval page
           toast({
             title: "รอการอนุมัติ",
             description: "บัญชีของคุณรอการอนุมัติจากผู้ดูแลระบบ",
-            variant: "destructive",
+            variant: "destructive"
           });
           navigate("/pending-approval");
           return;
         }
-
         toast({
           title: "เข้าสู่ระบบสำเร็จ",
-          description: "ยินดีต้อนรับกลับมา",
+          description: "ยินดีต้อนรับกลับมา"
         });
       } else {
-        const { error } = await supabase.auth.signUp({
+        const {
+          error
+        } = await supabase.auth.signUp({
           email,
           password,
           options: {
             emailRedirectTo: `${window.location.origin}/`,
             data: {
-              full_name: fullName,
-            },
-          },
+              full_name: fullName
+            }
+          }
         });
-
         if (error) throw error;
-
         toast({
           title: "สมัครสมาชิกสำเร็จ",
-          description: "กรุณารอการอนุมัติจากผู้ดูแลระบบ",
+          description: "กรุณารอการอนุมัติจากผู้ดูแลระบบ"
         });
-        
+
         // Switch to login mode after signup
         setIsLogin(true);
       }
@@ -95,15 +99,13 @@ export default function Auth() {
       toast({
         title: "เกิดข้อผิดพลาด",
         description: error.message,
-        variant: "destructive",
+        variant: "destructive"
       });
     } finally {
       setLoading(false);
     }
   };
-
-  return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-[#667eea] to-[#764ba2]">
+  return <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-[#667eea] to-[#764ba2]">
       <div className="flex bg-background rounded-[20px] shadow-[0_20px_60px_rgba(0,0,0,0.3)] overflow-hidden max-w-[1000px] w-full">
         {/* Left Panel */}
         <div className="flex-1 bg-gradient-to-br from-[#4facfe] to-[#00f2fe] p-[60px_40px] flex flex-col justify-center items-center text-white relative overflow-hidden">
@@ -119,7 +121,7 @@ export default function Auth() {
           {/* Logo Section */}
           <div className="text-center z-[2] relative">
             <div className="w-[180px] h-[180px] bg-white rounded-full flex items-center justify-center mx-auto mb-6 shadow-[0_10px_30px_rgba(0,0,0,0.2)] p-6">
-              <img src={hospitalLogo} alt="Sansai Hospital Logo" className="w-full h-full object-contain" />
+              
             </div>
             <h1 className="text-[32px] font-bold mb-2 drop-shadow-[0_2px_10px_rgba(0,0,0,0.2)] z-[2]">โรงพยาบาลสันทราย</h1>
             <p className="text-lg font-normal opacity-95 z-[2]">Sansai Hospital</p>
@@ -136,63 +138,29 @@ export default function Auth() {
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
-            {!isLogin && (
-              <div className="space-y-2">
+            {!isLogin && <div className="space-y-2">
                 <Label htmlFor="fullName" className="text-[15px] font-medium text-[#4a5568]">ชื่อ-นามสกุล</Label>
-                <Input
-                  id="fullName"
-                  type="text"
-                  value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
-                  className="h-12 px-[18px] text-[15px] border-2 border-[#e2e8f0] rounded-[10px] bg-[#f7fafc] focus:border-[#4facfe] focus:bg-white focus:ring-[3px] focus:ring-[rgba(79,172,254,0.1)]"
-                  placeholder="กรุณากรอกชื่อ-นามสกุล"
-                />
-              </div>
-            )}
+                <Input id="fullName" type="text" value={fullName} onChange={e => setFullName(e.target.value)} className="h-12 px-[18px] text-[15px] border-2 border-[#e2e8f0] rounded-[10px] bg-[#f7fafc] focus:border-[#4facfe] focus:bg-white focus:ring-[3px] focus:ring-[rgba(79,172,254,0.1)]" placeholder="กรุณากรอกชื่อ-นามสกุล" />
+              </div>}
             <div className="space-y-2">
               <Label htmlFor="email" className="text-[15px] font-medium text-[#4a5568]">อีเมล</Label>
-              <Input
-                id="email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                className="h-12 px-[18px] text-[15px] border-2 border-[#e2e8f0] rounded-[10px] bg-[#f7fafc] focus:border-[#4facfe] focus:bg-white focus:ring-[3px] focus:ring-[rgba(79,172,254,0.1)]"
-                placeholder="กรุณากรอกอีเมลของคุณ"
-              />
+              <Input id="email" type="email" value={email} onChange={e => setEmail(e.target.value)} required className="h-12 px-[18px] text-[15px] border-2 border-[#e2e8f0] rounded-[10px] bg-[#f7fafc] focus:border-[#4facfe] focus:bg-white focus:ring-[3px] focus:ring-[rgba(79,172,254,0.1)]" placeholder="กรุณากรอกอีเมลของคุณ" />
             </div>
             <div className="space-y-2">
               <Label htmlFor="password" className="text-[15px] font-medium text-[#4a5568]">รหัสผ่าน</Label>
-              <Input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                className="h-12 px-[18px] text-[15px] border-2 border-[#e2e8f0] rounded-[10px] bg-[#f7fafc] focus:border-[#4facfe] focus:bg-white focus:ring-[3px] focus:ring-[rgba(79,172,254,0.1)]"
-                placeholder="กรุณากรอกรหัสผ่าน"
-              />
+              <Input id="password" type="password" value={password} onChange={e => setPassword(e.target.value)} required className="h-12 px-[18px] text-[15px] border-2 border-[#e2e8f0] rounded-[10px] bg-[#f7fafc] focus:border-[#4facfe] focus:bg-white focus:ring-[3px] focus:ring-[rgba(79,172,254,0.1)]" placeholder="กรุณากรอกรหัสผ่าน" />
             </div>
-            <Button 
-              type="submit" 
-              className="w-full h-14 bg-gradient-to-r from-[#4facfe] to-[#00f2fe] text-white rounded-[10px] text-[17px] font-semibold shadow-[0_4px_15px_rgba(79,172,254,0.4)] hover:shadow-[0_6px_20px_rgba(79,172,254,0.5)] hover:-translate-y-0.5 transition-all duration-300 mt-2.5" 
-              disabled={loading}
-            >
+            <Button type="submit" className="w-full h-14 bg-gradient-to-r from-[#4facfe] to-[#00f2fe] text-white rounded-[10px] text-[17px] font-semibold shadow-[0_4px_15px_rgba(79,172,254,0.4)] hover:shadow-[0_6px_20px_rgba(79,172,254,0.5)] hover:-translate-y-0.5 transition-all duration-300 mt-2.5" disabled={loading}>
               {loading ? "กำลังดำเนินการ..." : isLogin ? "เข้าสู่ระบบ" : "สมัครสมาชิก"}
             </Button>
           </form>
           
           <div className="text-center mt-6">
-            <button
-              type="button"
-              onClick={() => setIsLogin(!isLogin)}
-              className="text-[15px] text-[#4facfe] font-medium hover:text-[#3b8fd9] transition-colors duration-300 hover:underline"
-            >
+            <button type="button" onClick={() => setIsLogin(!isLogin)} className="text-[15px] text-[#4facfe] font-medium hover:text-[#3b8fd9] transition-colors duration-300 hover:underline">
               {isLogin ? "ยังไม่มีบัญชี? สมัครสมาชิก" : "มีบัญชีแล้ว? เข้าสู่ระบบ"}
             </button>
           </div>
         </div>
       </div>
-    </div>
-  );
+    </div>;
 }
