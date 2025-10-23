@@ -48,7 +48,7 @@ export default function Income() {
 
   // Filter items based on selected category
   const filteredItems = useMemo(() => {
-    if (!formData.category) return items;
+    if (!formData.category) return items; // Show all items if no category selected
     return items.filter((item: any) => item.category_id === formData.category);
   }, [items, formData.category]);
 
@@ -202,7 +202,7 @@ export default function Income() {
 
               {/* Category */}
               <div className="space-y-2">
-                <Label htmlFor="category">หมวดหมู่ *</Label>
+                <Label htmlFor="category">หมวดหมู่</Label>
                 <Combobox
                   options={categoryOptions}
                   value={formData.category}
@@ -220,10 +220,9 @@ export default function Income() {
                   options={itemOptions}
                   value={formData.item}
                   onValueChange={handleItemChange}
-                  placeholder="เลือกรายการ (ถ้ามี)"
+                  placeholder="เลือกรายการ"
                   searchPlaceholder="ค้นหารายการ..."
-                  emptyText={formData.category ? "ไม่พบรายการในหมวดหมู่นี้" : "กรุณาเลือกหมวดหมู่ก่อน"}
-                  disabled={!formData.category}
+                  emptyText="ไม่พบรายการ"
                 />
               </div>
 
