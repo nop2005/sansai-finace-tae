@@ -120,8 +120,8 @@ export default function Auth() {
 
           {/* Logo Section */}
           <div className="text-center z-[2] relative">
-            <div className="w-[180px] h-[180px] bg-white rounded-full flex items-center justify-center mx-auto mb-6 shadow-[0_10px_30px_rgba(0,0,0,0.2)] p-6">
-              
+            <div className="w-[180px] h-[180px] bg-white rounded-full flex items-center justify-center mx-auto mb-6 shadow-[0_10px_30px_rgba(0,0,0,0.2)] overflow-hidden">
+              <img src={hospitalLogo} alt="Hospital Logo" className="w-full h-full object-cover rounded-full" />
             </div>
             <h1 className="text-[32px] font-bold mb-2 drop-shadow-[0_2px_10px_rgba(0,0,0,0.2)] z-[2]">โรงพยาบาลสันทราย</h1>
             <p className="text-lg font-normal opacity-95 z-[2]">Sansai Hospital</p>
