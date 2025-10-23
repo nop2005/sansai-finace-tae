@@ -123,15 +123,15 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   };
 
   const handleLogout = () => {
-    // Clear all Supabase auth data from localStorage
+    // Clear localStorage immediately
     localStorage.removeItem('sb-uhpopshxfkpzdsbpecyj-auth-token');
     
-    // Clear component state
+    // Clear state
     setUser(null);
     setAllowedMenus([]);
     
-    // Force navigation to auth page
-    window.location.href = '/auth';
+    // Navigate smoothly without page reload
+    navigate("/auth", { replace: true });
   };
 
   const navigation = allNavigation.filter((item) => 
