@@ -123,8 +123,20 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   };
 
   const handleLogout = async () => {
-    await supabase.auth.signOut();
-    navigate("/auth");
+    try {
+      // Clear local session first
+      setUser(null);
+      setAllowedMenus([]);
+      
+      // Attempt to sign out from server (ignore errors as session might already be expired)
+      await supabase.auth.signOut();
+    } catch (error) {
+      // Ignore logout errors - session might be expired
+      console.log("Logout error (ignored):", error);
+    } finally {
+      // Always navigate to auth page regardless of server response
+      navigate("/auth");
+    }
   };
 
   const navigation = allNavigation.filter((item) => 
