@@ -299,21 +299,15 @@ export default function MonthlyDetail() {
   const handlePrintPDF = () => {
     const pdf = new jsPDF('p', 'mm', 'a4') as any;
     
-    // Add custom font for Thai support
-    pdf.addFont('https://fonts.gstatic.com/s/sarabun/v13/DtVjJx26TKEr37c9YHZJmnYI5gnOpg.woff2', 'Sarabun', 'normal');
-    pdf.setFont('Sarabun');
-    
     let yPos = 20;
     
     // Title
     pdf.setFontSize(18);
-    pdf.setFont('Sarabun', 'bold');
     pdf.text(`สรุปบัญชีประจำเดือน ${monthName} ${year}`, 105, yPos, { align: 'center' });
     yPos += 15;
     
     // Income Section
     pdf.setFontSize(14);
-    pdf.setFont('Sarabun', 'bold');
     pdf.text('รายละเอียดรายรับ', 14, yPos);
     yPos += 7;
     
@@ -342,14 +336,12 @@ export default function MonthlyDetail() {
       head: [['หมวดรายรับ', 'รายการรายรับ', `เดือน ${monthName} ${year}`]],
       body: incomeTableData,
       styles: {
-        font: 'Sarabun',
         fontSize: 10,
         cellPadding: 3
       },
       headStyles: {
         fillColor: [243, 244, 246],
-        textColor: [0, 0, 0],
-        fontStyle: 'bold'
+        textColor: [0, 0, 0]
       },
       columnStyles: {
         0: { cellWidth: 70 },
@@ -362,7 +354,6 @@ export default function MonthlyDetail() {
     
     // Expense Section
     pdf.setFontSize(14);
-    pdf.setFont('Sarabun', 'bold');
     pdf.text('รายละเอียดรายจ่าย', 14, yPos);
     yPos += 7;
     
@@ -391,14 +382,12 @@ export default function MonthlyDetail() {
       head: [['หมวดรายจ่าย', 'รายการรายจ่าย', `เดือน ${monthName} ${year}`]],
       body: expenseTableData,
       styles: {
-        font: 'Sarabun',
         fontSize: 10,
         cellPadding: 3
       },
       headStyles: {
         fillColor: [243, 244, 246],
-        textColor: [0, 0, 0],
-        fontStyle: 'bold'
+        textColor: [0, 0, 0]
       },
       columnStyles: {
         0: { cellWidth: 70 },
@@ -416,7 +405,6 @@ export default function MonthlyDetail() {
     }
     
     pdf.setFontSize(14);
-    pdf.setFont('Sarabun', 'bold');
     pdf.text('สรุป', 14, yPos);
     yPos += 7;
     
@@ -425,13 +413,9 @@ export default function MonthlyDetail() {
       body: [
         ['รายรับรวม:', `${totalIncome.toLocaleString("th-TH", { minimumFractionDigits: 2 })} บาท`],
         ['รายจ่ายรวม:', `${totalExpense.toLocaleString("th-TH", { minimumFractionDigits: 2 })} บาท`],
-        [
-          { content: 'เงินคงเหลือ:', styles: { fontStyle: 'bold' } },
-          { content: `${balance.toLocaleString("th-TH", { minimumFractionDigits: 2 })} บาท`, styles: { fontStyle: 'bold', fontSize: 12 } }
-        ]
+        ['เงินคงเหลือ:', `${balance.toLocaleString("th-TH", { minimumFractionDigits: 2 })} บาท`]
       ],
       styles: {
-        font: 'Sarabun',
         fontSize: 10,
         cellPadding: 3
       },
