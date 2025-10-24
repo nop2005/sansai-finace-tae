@@ -7,8 +7,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { format, startOfMonth, endOfMonth } from "date-fns";
 import { th } from "date-fns/locale";
 import * as XLSX from 'xlsx';
-import jsPDF from 'jspdf';
-import autoTable from 'jspdf-autotable';
+import pdfMake from 'pdfmake/build/pdfmake';
+import pdfFonts from 'pdfmake/build/vfs_fonts';
+
+pdfMake.vfs = pdfFonts.pdfMake.vfs;
 
 export default function MonthlyDetail() {
   const navigate = useNavigate();
@@ -296,63 +298,137 @@ export default function MonthlyDetail() {
   };
 
   const handlePrintPDF = () => {
-    const doc = new jsPDF();
-    
-    // Add Thai font support (using default font for now)
-    doc.setFont("helvetica");
-    
-    // Title
-    doc.setFontSize(16);
-    doc.text(`สรุปบัญชีประจำเดือน ${monthName} ${year}`, 14, 20);
-    
-    // Summary
-    doc.setFontSize(12);
-    doc.text(`รายรับรวม: ${totalIncome.toLocaleString()} บาท`, 14, 35);
-    doc.text(`รายจ่ายรวม: ${totalExpense.toLocaleString()} บาท`, 14, 42);
-    doc.text(`เงินคงเหลือ: ${balance.toLocaleString()} บาท`, 14, 49);
-    
-    let yPos = 60;
-
-    // Income table
-    const incomeTableData: any[] = [];
+    // Income table rows
+    const incomeTableBody: any[] = [];
     incomeByCategory.forEach((categoryData, catIndex) => {
-      incomeTableData.push([`${catIndex + 1}. ${categoryData.category.name}`, '', '']);
+      incomeTableBody.push([
+        { text: `${catIndex + 1}. ${categoryData.category.name}`, bold: true, colSpan: 2 },
+        {},
+        ''
+      ]);
       categoryData.items.forEach((item, itemIndex) => {
-        incomeTableData.push(['', `${catIndex + 1}.${itemIndex + 1} ${item.name}`, item.total.toLocaleString("th-TH", { minimumFractionDigits: 2 })]);
+        incomeTableBody.push([
+          '',
+          `${catIndex + 1}.${itemIndex + 1} ${item.name}`,
+          { text: item.total.toLocaleString("th-TH", { minimumFractionDigits: 2 }), alignment: 'right' }
+        ]);
       });
     });
-    incomeTableData.push(['รวมรายรับทั้งหมด', '', totalIncome.toLocaleString("th-TH", { minimumFractionDigits: 2 })]);
+    incomeTableBody.push([
+      { text: 'รวมรายรับทั้งหมด', bold: true, colSpan: 2 },
+      {},
+      { text: totalIncome.toLocaleString("th-TH", { minimumFractionDigits: 2 }), alignment: 'right', bold: true }
+    ]);
 
-    autoTable(doc, {
-      head: [['หมวดรายรับ', 'รายการรายรับ', `เดือน ${monthName} ${year}`]],
-      body: incomeTableData,
-      startY: yPos,
-      theme: 'grid',
-      styles: { font: 'helvetica', fontSize: 10 },
-      headStyles: { fillColor: [34, 197, 94] }
-    });
-
-    // Expense table
-    yPos = (doc as any).lastAutoTable.finalY + 10;
-    const expenseTableData: any[] = [];
+    // Expense table rows
+    const expenseTableBody: any[] = [];
     expenseByCategory.forEach((categoryData, catIndex) => {
-      expenseTableData.push([`${catIndex + 1}. ${categoryData.category.name}`, '', '']);
+      expenseTableBody.push([
+        { text: `${catIndex + 1}. ${categoryData.category.name}`, bold: true, colSpan: 2 },
+        {},
+        ''
+      ]);
       categoryData.items.forEach((item, itemIndex) => {
-        expenseTableData.push(['', `${catIndex + 1}.${itemIndex + 1} ${item.name}`, item.total.toLocaleString("th-TH", { minimumFractionDigits: 2 })]);
+        expenseTableBody.push([
+          '',
+          `${catIndex + 1}.${itemIndex + 1} ${item.name}`,
+          { text: item.total.toLocaleString("th-TH", { minimumFractionDigits: 2 }), alignment: 'right' }
+        ]);
       });
     });
-    expenseTableData.push(['รวมรายจ่ายทั้งหมด', '', totalExpense.toLocaleString("th-TH", { minimumFractionDigits: 2 })]);
+    expenseTableBody.push([
+      { text: 'รวมรายจ่ายทั้งหมด', bold: true, colSpan: 2 },
+      {},
+      { text: totalExpense.toLocaleString("th-TH", { minimumFractionDigits: 2 }), alignment: 'right', bold: true }
+    ]);
 
-    autoTable(doc, {
-      head: [['หมวดรายจ่าย', 'รายการรายจ่าย', `เดือน ${monthName} ${year}`]],
-      body: expenseTableData,
-      startY: yPos,
-      theme: 'grid',
-      styles: { font: 'helvetica', fontSize: 10 },
-      headStyles: { fillColor: [239, 68, 68] }
-    });
+    const documentDefinition: any = {
+      content: [
+        { text: `สรุปบัญชีประจำเดือน ${monthName} ${year}`, style: 'header' },
+        { text: 'รายละเอียดรายรับ', style: 'subheader' },
+        {
+          table: {
+            body: [
+              [
+                { text: 'หมวดรายรับ', style: 'tableHeader' },
+                { text: 'รายการรายรับ', style: 'tableHeader' },
+                { text: `เดือน ${monthName} ${year}`, style: 'tableHeader', alignment: 'right' }
+              ],
+              ...incomeTableBody
+            ]
+          },
+          layout: 'lightHorizontalLines'
+        },
+        { text: 'รายละเอียดรายจ่าย', style: 'subheader', margin: [0, 20, 0, 0] },
+        {
+          table: {
+            body: [
+              [
+                { text: 'หมวดรายจ่าย', style: 'tableHeader' },
+                { text: 'รายการรายจ่าย', style: 'tableHeader' },
+                { text: `เดือน ${monthName} ${year}`, style: 'tableHeader', alignment: 'right' }
+              ],
+              ...expenseTableBody
+            ]
+          },
+          layout: 'lightHorizontalLines'
+        },
+        { text: 'สรุป', style: 'subheader', margin: [0, 20, 0, 0] },
+        {
+          columns: [
+            { text: 'รายรับรวม:', width: 'auto' },
+            { text: totalIncome.toLocaleString("th-TH", { minimumFractionDigits: 2 }), alignment: 'right', width: '*' }
+          ]
+        },
+        {
+          columns: [
+            { text: 'รายจ่ายรวม:', width: 'auto' },
+            { text: totalExpense.toLocaleString("th-TH", { minimumFractionDigits: 2 }), alignment: 'right', width: '*' }
+          ]
+        },
+        {
+          columns: [
+            { text: 'เงินคงเหลือ:', style: 'bold', width: 'auto' },
+            { text: balance.toLocaleString("th-TH", { minimumFractionDigits: 2 }), alignment: 'right', width: '*' }
+          ]
+        }
+      ],
+      styles: {
+        header: {
+          fontSize: 18,
+          bold: true,
+          margin: [0, 0, 0, 15],
+          alignment: 'center'
+        },
+        subheader: {
+          fontSize: 14,
+          bold: true,
+          margin: [0, 10, 0, 10]
+        },
+        tableHeader: {
+          bold: true,
+          fontSize: 12
+        },
+        bold: {
+          bold: true
+        }
+      },
+      defaultStyle: {
+        font: 'THSarabunNew',
+        fontSize: 12
+      },
+    };
 
-    doc.save(`รายงานประจำเดือน_${monthName}_${year}.pdf`);
+    pdfMake.fonts = {
+      THSarabunNew: {
+        normal: 'THSarabunNew.ttf',
+        bold: 'THSarabunNew Bold.ttf',
+        italics: 'THSarabunNew Italic.ttf',
+        bolditalics: 'THSarabunNew BoldItalic.ttf'
+      }
+    }
+
+    pdfMake.createPdf(documentDefinition).open();
   };
 
   return (
