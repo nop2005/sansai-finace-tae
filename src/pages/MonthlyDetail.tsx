@@ -91,6 +91,53 @@ export default function MonthlyDetail() {
     };
   }).filter(cat => cat.total > 0);
 
+  // Handle transactions without category_id
+  const noCategoryIncomeTransactions = transactions.filter(
+    t => t.type === "income" && !t.category_id
+  );
+  
+  if (noCategoryIncomeTransactions.length > 0) {
+    const noCategoryItems: any[] = [];
+    
+    // Group by item_id
+    const itemMap = new Map();
+    noCategoryIncomeTransactions.forEach(t => {
+      if (t.item_id) {
+        const item = incomeItems.find(i => i.id === t.item_id);
+        if (item) {
+          if (!itemMap.has(t.item_id)) {
+            itemMap.set(t.item_id, { ...item, total: 0 });
+          }
+          itemMap.get(t.item_id).total += Number(t.amount);
+        }
+      }
+    });
+    
+    itemMap.forEach(item => noCategoryItems.push(item));
+    
+    // Handle transactions without item_id
+    const noItemTransactions = noCategoryIncomeTransactions.filter(t => !t.item_id);
+    const noItemTotal = noItemTransactions.reduce((sum, t) => sum + Number(t.amount), 0);
+    
+    if (noItemTotal > 0) {
+      noCategoryItems.push({
+        id: 'no-category-no-item',
+        name: "ไม่ระบุรายการ",
+        total: noItemTotal
+      });
+    }
+    
+    const noCategoryTotal = noCategoryIncomeTransactions.reduce((sum, t) => sum + Number(t.amount), 0);
+    
+    if (noCategoryTotal > 0) {
+      incomeByCategory.push({
+        category: { id: 'no-category', name: 'ไม่ระบุหมวด' },
+        items: noCategoryItems,
+        total: noCategoryTotal
+      });
+    }
+  }
+
   // Group expenses by category and item
   const expenseByCategory = expenseCategories.map(category => {
     const categoryTransactions = transactions.filter(
@@ -127,6 +174,53 @@ export default function MonthlyDetail() {
       total: categoryTotal
     };
   }).filter(cat => cat.total > 0);
+
+  // Handle transactions without category_id
+  const noCategoryExpenseTransactions = transactions.filter(
+    t => t.type === "expense" && !t.category_id
+  );
+  
+  if (noCategoryExpenseTransactions.length > 0) {
+    const noCategoryItems: any[] = [];
+    
+    // Group by item_id
+    const itemMap = new Map();
+    noCategoryExpenseTransactions.forEach(t => {
+      if (t.item_id) {
+        const item = expenseItems.find(i => i.id === t.item_id);
+        if (item) {
+          if (!itemMap.has(t.item_id)) {
+            itemMap.set(t.item_id, { ...item, total: 0 });
+          }
+          itemMap.get(t.item_id).total += Number(t.amount);
+        }
+      }
+    });
+    
+    itemMap.forEach(item => noCategoryItems.push(item));
+    
+    // Handle transactions without item_id
+    const noItemTransactions = noCategoryExpenseTransactions.filter(t => !t.item_id);
+    const noItemTotal = noItemTransactions.reduce((sum, t) => sum + Number(t.amount), 0);
+    
+    if (noItemTotal > 0) {
+      noCategoryItems.push({
+        id: 'no-category-no-item',
+        name: "ไม่ระบุรายการ",
+        total: noItemTotal
+      });
+    }
+    
+    const noCategoryTotal = noCategoryExpenseTransactions.reduce((sum, t) => sum + Number(t.amount), 0);
+    
+    if (noCategoryTotal > 0) {
+      expenseByCategory.push({
+        category: { id: 'no-category', name: 'ไม่ระบุหมวด' },
+        items: noCategoryItems,
+        total: noCategoryTotal
+      });
+    }
+  }
 
   const totalIncome = transactions
     .filter(t => t.type === "income")
