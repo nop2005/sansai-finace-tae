@@ -7,8 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { format, startOfMonth, endOfMonth } from "date-fns";
 import { th } from "date-fns/locale";
 import * as XLSX from 'xlsx';
-import { pdf } from '@react-pdf/renderer';
-import { MonthlyReportPDF } from '@/components/MonthlyReportPDF';
+import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
 
 export default function MonthlyDetail() {
   const navigate = useNavigate();
@@ -297,26 +296,223 @@ export default function MonthlyDetail() {
 
 
   const handlePrintPDF = async () => {
-    const doc = (
-      <MonthlyReportPDF
-        monthName={monthName}
-        year={year || ''}
-        totalIncome={totalIncome}
-        totalExpense={totalExpense}
-        balance={balance}
-        incomeByCategory={incomeByCategory}
-        expenseByCategory={expenseByCategory}
-      />
-    );
-
-    const asPdf = pdf(doc);
-    const blob = await asPdf.toBlob();
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `รายงานประจำเดือน_${monthName}_${year}.pdf`;
-    link.click();
-    URL.revokeObjectURL(url);
+    try {
+      // Create a new PDF document
+      const pdfDoc = await PDFDocument.create();
+      
+      // Embed the font
+      const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
+      const fontBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+      
+      // Add a page
+      let page = pdfDoc.addPage([595, 842]); // A4 size
+      const { width, height } = page.getSize();
+      
+      let yPosition = height - 50;
+      
+      // Title
+      page.drawText(`Saraban Prajam Duean ${monthName} ${year}`, {
+        x: 50,
+        y: yPosition,
+        size: 18,
+        font: fontBold,
+      });
+      yPosition -= 30;
+      
+      // Income Section
+      page.drawText('Raileeid Rayrub', {
+        x: 50,
+        y: yPosition,
+        size: 14,
+        font: fontBold,
+      });
+      yPosition -= 20;
+      
+      // Income table header
+      page.drawText('Category', { x: 50, y: yPosition, size: 10, font: fontBold });
+      page.drawText('Item', { x: 200, y: yPosition, size: 10, font: fontBold });
+      page.drawText('Amount', { x: 450, y: yPosition, size: 10, font: fontBold });
+      yPosition -= 15;
+      
+      // Income data
+      incomeByCategory.forEach((categoryData, catIndex) => {
+        if (yPosition < 50) {
+          page = pdfDoc.addPage([595, 842]);
+          yPosition = height - 50;
+        }
+        
+        page.drawText(`${catIndex + 1}. ${categoryData.category.name}`, {
+          x: 50,
+          y: yPosition,
+          size: 10,
+          font: fontBold,
+        });
+        yPosition -= 15;
+        
+        categoryData.items.forEach((item, itemIndex) => {
+          if (yPosition < 50) {
+            page = pdfDoc.addPage([595, 842]);
+            yPosition = height - 50;
+          }
+          
+          page.drawText(`${catIndex + 1}.${itemIndex + 1} ${item.name}`, {
+            x: 200,
+            y: yPosition,
+            size: 10,
+            font,
+          });
+          
+          page.drawText(item.total.toLocaleString('th-TH', { minimumFractionDigits: 2 }), {
+            x: 450,
+            y: yPosition,
+            size: 10,
+            font,
+          });
+          yPosition -= 15;
+        });
+      });
+      
+      // Total Income
+      yPosition -= 5;
+      page.drawText('Total Income:', {
+        x: 50,
+        y: yPosition,
+        size: 10,
+        font: fontBold,
+      });
+      page.drawText(totalIncome.toLocaleString('th-TH', { minimumFractionDigits: 2 }), {
+        x: 450,
+        y: yPosition,
+        size: 10,
+        font: fontBold,
+      });
+      yPosition -= 30;
+      
+      // Expense Section
+      if (yPosition < 200) {
+        page = pdfDoc.addPage([595, 842]);
+        yPosition = height - 50;
+      }
+      
+      page.drawText('Raileeid Rayjay', {
+        x: 50,
+        y: yPosition,
+        size: 14,
+        font: fontBold,
+      });
+      yPosition -= 20;
+      
+      // Expense table header
+      page.drawText('Category', { x: 50, y: yPosition, size: 10, font: fontBold });
+      page.drawText('Item', { x: 200, y: yPosition, size: 10, font: fontBold });
+      page.drawText('Amount', { x: 450, y: yPosition, size: 10, font: fontBold });
+      yPosition -= 15;
+      
+      // Expense data
+      expenseByCategory.forEach((categoryData, catIndex) => {
+        if (yPosition < 50) {
+          page = pdfDoc.addPage([595, 842]);
+          yPosition = height - 50;
+        }
+        
+        page.drawText(`${catIndex + 1}. ${categoryData.category.name}`, {
+          x: 50,
+          y: yPosition,
+          size: 10,
+          font: fontBold,
+        });
+        yPosition -= 15;
+        
+        categoryData.items.forEach((item, itemIndex) => {
+          if (yPosition < 50) {
+            page = pdfDoc.addPage([595, 842]);
+            yPosition = height - 50;
+          }
+          
+          page.drawText(`${catIndex + 1}.${itemIndex + 1} ${item.name}`, {
+            x: 200,
+            y: yPosition,
+            size: 10,
+            font,
+          });
+          
+          page.drawText(item.total.toLocaleString('th-TH', { minimumFractionDigits: 2 }), {
+            x: 450,
+            y: yPosition,
+            size: 10,
+            font,
+          });
+          yPosition -= 15;
+        });
+      });
+      
+      // Total Expense
+      yPosition -= 5;
+      page.drawText('Total Expense:', {
+        x: 50,
+        y: yPosition,
+        size: 10,
+        font: fontBold,
+      });
+      page.drawText(totalExpense.toLocaleString('th-TH', { minimumFractionDigits: 2 }), {
+        x: 450,
+        y: yPosition,
+        size: 10,
+        font: fontBold,
+      });
+      yPosition -= 30;
+      
+      // Summary
+      if (yPosition < 100) {
+        page = pdfDoc.addPage([595, 842]);
+        yPosition = height - 50;
+      }
+      
+      page.drawText('Summary', {
+        x: 50,
+        y: yPosition,
+        size: 14,
+        font: fontBold,
+      });
+      yPosition -= 20;
+      
+      page.drawText(`Total Income: ${totalIncome.toLocaleString('th-TH', { minimumFractionDigits: 2 })} Baht`, {
+        x: 50,
+        y: yPosition,
+        size: 10,
+        font,
+      });
+      yPosition -= 15;
+      
+      page.drawText(`Total Expense: ${totalExpense.toLocaleString('th-TH', { minimumFractionDigits: 2 })} Baht`, {
+        x: 50,
+        y: yPosition,
+        size: 10,
+        font,
+      });
+      yPosition -= 15;
+      
+      page.drawText(`Balance: ${balance.toLocaleString('th-TH', { minimumFractionDigits: 2 })} Baht`, {
+        x: 50,
+        y: yPosition,
+        size: 10,
+        font: fontBold,
+      });
+      
+      // Save the PDF
+      const pdfBytes = await pdfDoc.save();
+      
+      // Download the PDF
+      const blob = new Blob([new Uint8Array(pdfBytes)], { type: 'application/pdf' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `รายงานประจำเดือน_${monthName}_${year}.pdf`;
+      link.click();
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+    }
   };
 
   return (
