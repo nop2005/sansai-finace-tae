@@ -60,14 +60,21 @@ export default function MonthlyDetail() {
       t => t.type === "income" && t.category_id === category.id
     );
     
-    const items = incomeItems
-      .filter(item => item.category_id === category.id)
-      .map(item => {
-        const itemTransactions = categoryTransactions.filter(t => t.item_id === item.id);
-        const total = itemTransactions.reduce((sum, t) => sum + Number(t.amount), 0);
-        return { ...item, total };
-      })
-      .filter(item => item.total > 0); // Only show items with transactions
+    // Get all unique item_ids from transactions for this category
+    const uniqueItemIds = [...new Set(categoryTransactions.filter(t => t.item_id).map(t => t.item_id))];
+    
+    const items = uniqueItemIds.map(itemId => {
+      const item = incomeItems.find(i => i.id === itemId);
+      const itemTransactions = categoryTransactions.filter(t => t.item_id === itemId);
+      const total = itemTransactions.reduce((sum, t) => sum + Number(t.amount), 0);
+      
+      return {
+        id: itemId,
+        name: item?.name || "ไม่ทราบชื่อรายการ",
+        category_id: category.id,
+        total
+      };
+    }).filter(item => item.total > 0);
 
     // Handle transactions without item_id
     const noItemTransactions = categoryTransactions.filter(t => !t.item_id);
@@ -144,14 +151,21 @@ export default function MonthlyDetail() {
       t => t.type === "expense" && t.category_id === category.id
     );
     
-    const items = expenseItems
-      .filter(item => item.category_id === category.id)
-      .map(item => {
-        const itemTransactions = categoryTransactions.filter(t => t.item_id === item.id);
-        const total = itemTransactions.reduce((sum, t) => sum + Number(t.amount), 0);
-        return { ...item, total };
-      })
-      .filter(item => item.total > 0); // Only show items with transactions
+    // Get all unique item_ids from transactions for this category
+    const uniqueItemIds = [...new Set(categoryTransactions.filter(t => t.item_id).map(t => t.item_id))];
+    
+    const items = uniqueItemIds.map(itemId => {
+      const item = expenseItems.find(i => i.id === itemId);
+      const itemTransactions = categoryTransactions.filter(t => t.item_id === itemId);
+      const total = itemTransactions.reduce((sum, t) => sum + Number(t.amount), 0);
+      
+      return {
+        id: itemId,
+        name: item?.name || "ไม่ทราบชื่อรายการ",
+        category_id: category.id,
+        total
+      };
+    }).filter(item => item.total > 0);
 
     // Handle transactions without item_id
     const noItemTransactions = categoryTransactions.filter(t => !t.item_id);
