@@ -10,8 +10,22 @@ import * as XLSX from 'xlsx';
 import pdfMake from 'pdfmake/build/pdfmake';
 import pdfFonts from 'pdfmake/build/vfs_fonts';
 
-// @ts-ignore
-pdfMake.vfs = pdfFonts;
+// Configure Thai font support
+pdfMake.vfs = pdfFonts.pdfMake.vfs;
+pdfMake.fonts = {
+  THSarabunNew: {
+    normal: 'Roboto-Regular.ttf',
+    bold: 'Roboto-Medium.ttf',
+    italics: 'Roboto-Italic.ttf',
+    bolditalics: 'Roboto-MediumItalic.ttf'
+  },
+  Roboto: {
+    normal: 'Roboto-Regular.ttf',
+    bold: 'Roboto-Medium.ttf',
+    italics: 'Roboto-Italic.ttf',
+    bolditalics: 'Roboto-MediumItalic.ttf'
+  }
+};
 
 export default function MonthlyDetail() {
   const navigate = useNavigate();
@@ -415,7 +429,8 @@ export default function MonthlyDetail() {
         }
       },
       defaultStyle: {
-        fontSize: 14
+        font: 'THSarabunNew',
+        fontSize: 16
       },
     };
 
