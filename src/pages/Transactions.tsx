@@ -35,6 +35,7 @@ export default function Transactions() {
   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
   const [selectedTransaction, setSelectedTransaction] = useState<any>(null);
   const [editForm, setEditForm] = useState({
+    category_id: "",
     item_id: "",
     amount: "",
     date: new Date(),
@@ -127,6 +128,7 @@ export default function Transactions() {
   const handleEdit = (transaction: any) => {
     setSelectedTransaction(transaction);
     setEditForm({
+      category_id: transaction.category_id || "",
       item_id: transaction.item_id || "",
       amount: transaction.amount.toString(),
       date: new Date(transaction.date),
@@ -157,6 +159,7 @@ export default function Transactions() {
     const { error } = await supabase
       .from("transactions")
       .update({
+        category_id: editForm.category_id,
         item_id: editForm.item_id,
         amount: parseFloat(editForm.amount),
         date: format(editForm.date, "yyyy-MM-dd"),
@@ -753,6 +756,32 @@ export default function Transactions() {
           
           <div className="space-y-4">
             <div className="space-y-2">
+              <Label>หมวด</Label>
+              <Select 
+                value={editForm.category_id} 
+                onValueChange={(value) => setEditForm({...editForm, category_id: value, item_id: ""})}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="เลือกหมวดหมู่" />
+                </SelectTrigger>
+                <SelectContent>
+                  {selectedTransaction?.type === "income" 
+                    ? incomeCategories.map((category) => (
+                        <SelectItem key={category.id} value={category.id}>
+                          {category.name}
+                        </SelectItem>
+                      ))
+                    : expenseCategories.map((category) => (
+                        <SelectItem key={category.id} value={category.id}>
+                          {category.name}
+                        </SelectItem>
+                      ))
+                  }
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
               <Label>รายการ</Label>
               <Select 
                 value={editForm.item_id} 
@@ -763,16 +792,20 @@ export default function Transactions() {
                 </SelectTrigger>
                 <SelectContent>
                   {selectedTransaction?.type === "income" 
-                    ? incomeItems.map((item) => (
-                        <SelectItem key={item.id} value={item.id}>
-                          {item.name}
-                        </SelectItem>
-                      ))
-                    : expenseItems.map((item) => (
-                        <SelectItem key={item.id} value={item.id}>
-                          {item.name}
-                        </SelectItem>
-                      ))
+                    ? incomeItems
+                        .filter(item => !editForm.category_id || item.category_id === editForm.category_id)
+                        .map((item) => (
+                          <SelectItem key={item.id} value={item.id}>
+                            {item.name}
+                          </SelectItem>
+                        ))
+                    : expenseItems
+                        .filter(item => !editForm.category_id || item.category_id === editForm.category_id)
+                        .map((item) => (
+                          <SelectItem key={item.id} value={item.id}>
+                            {item.name}
+                          </SelectItem>
+                        ))
                   }
                 </SelectContent>
               </Select>
