@@ -66,7 +66,21 @@ export default function MonthlyDetail() {
         const itemTransactions = categoryTransactions.filter(t => t.item_id === item.id);
         const total = itemTransactions.reduce((sum, t) => sum + Number(t.amount), 0);
         return { ...item, total };
+      })
+      .filter(item => item.total > 0); // Only show items with transactions
+
+    // Handle transactions without item_id
+    const noItemTransactions = categoryTransactions.filter(t => !t.item_id);
+    const noItemTotal = noItemTransactions.reduce((sum, t) => sum + Number(t.amount), 0);
+    
+    if (noItemTotal > 0) {
+      items.push({
+        id: `no-item-${category.id}`,
+        name: "ไม่ระบุรายการ",
+        category_id: category.id,
+        total: noItemTotal
       });
+    }
 
     const categoryTotal = categoryTransactions.reduce((sum, t) => sum + Number(t.amount), 0);
     
@@ -89,7 +103,21 @@ export default function MonthlyDetail() {
         const itemTransactions = categoryTransactions.filter(t => t.item_id === item.id);
         const total = itemTransactions.reduce((sum, t) => sum + Number(t.amount), 0);
         return { ...item, total };
+      })
+      .filter(item => item.total > 0); // Only show items with transactions
+
+    // Handle transactions without item_id
+    const noItemTransactions = categoryTransactions.filter(t => !t.item_id);
+    const noItemTotal = noItemTransactions.reduce((sum, t) => sum + Number(t.amount), 0);
+    
+    if (noItemTotal > 0) {
+      items.push({
+        id: `no-item-${category.id}`,
+        name: "ไม่ระบุรายการ",
+        category_id: category.id,
+        total: noItemTotal
       });
+    }
 
     const categoryTotal = categoryTransactions.reduce((sum, t) => sum + Number(t.amount), 0);
     
