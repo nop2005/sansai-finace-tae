@@ -5,11 +5,11 @@ Font.register({
   family: 'Sarabun',
   fonts: [
     {
-      src: 'https://fonts.gstatic.com/s/sarabun/v13/DtVjJx26TKEr37c9YHZJmnYI5gnOpg.ttf',
+      src: 'http://fonts.gstatic.com/s/sarabun/v13/DtVjJx26TKEr37c9YHZJmnYI5gnOpg.ttf',
       fontWeight: 400,
     },
     {
-      src: 'https://fonts.gstatic.com/s/sarabun/v13/DtVmJx26TKEr37c9YNpoulwm6gDXvwE.ttf',
+      src: 'http://fonts.gstatic.com/s/sarabun/v13/DtVmJx26TKEr37c9YNpoulwm6gDXvwE.ttf',
       fontWeight: 700,
     },
   ],
