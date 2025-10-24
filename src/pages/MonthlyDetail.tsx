@@ -7,8 +7,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { format, startOfMonth, endOfMonth } from "date-fns";
 import { th } from "date-fns/locale";
 import * as XLSX from 'xlsx';
-import jsPDF from 'jspdf';
-import 'jspdf-autotable';
 
 export default function MonthlyDetail() {
   const navigate = useNavigate();
@@ -297,136 +295,8 @@ export default function MonthlyDetail() {
 
 
   const handlePrintPDF = () => {
-    const pdf = new jsPDF('p', 'mm', 'a4') as any;
-    
-    let yPos = 20;
-    
-    // Title
-    pdf.setFontSize(18);
-    pdf.text(`สรุปบัญชีประจำเดือน ${monthName} ${year}`, 105, yPos, { align: 'center' });
-    yPos += 15;
-    
-    // Income Section
-    pdf.setFontSize(14);
-    pdf.text('รายละเอียดรายรับ', 14, yPos);
-    yPos += 7;
-    
-    const incomeTableData: any[] = [];
-    incomeByCategory.forEach((categoryData, catIndex) => {
-      incomeTableData.push([
-        { content: `${catIndex + 1}. ${categoryData.category.name}`, colSpan: 2, styles: { fontStyle: 'bold' } },
-        ''
-      ]);
-      categoryData.items.forEach((item, itemIndex) => {
-        incomeTableData.push([
-          '',
-          `${catIndex + 1}.${itemIndex + 1} ${item.name}`,
-          item.total.toLocaleString("th-TH", { minimumFractionDigits: 2 })
-        ]);
-      });
-    });
-    
-    incomeTableData.push([
-      { content: 'รวมรายรับทั้งหมด', colSpan: 2, styles: { fontStyle: 'bold' } },
-      { content: totalIncome.toLocaleString("th-TH", { minimumFractionDigits: 2 }), styles: { fontStyle: 'bold' } }
-    ]);
-    
-    pdf.autoTable({
-      startY: yPos,
-      head: [['หมวดรายรับ', 'รายการรายรับ', `เดือน ${monthName} ${year}`]],
-      body: incomeTableData,
-      styles: {
-        fontSize: 10,
-        cellPadding: 3
-      },
-      headStyles: {
-        fillColor: [243, 244, 246],
-        textColor: [0, 0, 0]
-      },
-      columnStyles: {
-        0: { cellWidth: 70 },
-        1: { cellWidth: 80 },
-        2: { cellWidth: 40, halign: 'right' }
-      }
-    });
-    
-    yPos = pdf.lastAutoTable.finalY + 10;
-    
-    // Expense Section
-    pdf.setFontSize(14);
-    pdf.text('รายละเอียดรายจ่าย', 14, yPos);
-    yPos += 7;
-    
-    const expenseTableData: any[] = [];
-    expenseByCategory.forEach((categoryData, catIndex) => {
-      expenseTableData.push([
-        { content: `${catIndex + 1}. ${categoryData.category.name}`, colSpan: 2, styles: { fontStyle: 'bold' } },
-        ''
-      ]);
-      categoryData.items.forEach((item, itemIndex) => {
-        expenseTableData.push([
-          '',
-          `${catIndex + 1}.${itemIndex + 1} ${item.name}`,
-          item.total.toLocaleString("th-TH", { minimumFractionDigits: 2 })
-        ]);
-      });
-    });
-    
-    expenseTableData.push([
-      { content: 'รวมรายจ่ายทั้งหมด', colSpan: 2, styles: { fontStyle: 'bold' } },
-      { content: totalExpense.toLocaleString("th-TH", { minimumFractionDigits: 2 }), styles: { fontStyle: 'bold' } }
-    ]);
-    
-    pdf.autoTable({
-      startY: yPos,
-      head: [['หมวดรายจ่าย', 'รายการรายจ่าย', `เดือน ${monthName} ${year}`]],
-      body: expenseTableData,
-      styles: {
-        fontSize: 10,
-        cellPadding: 3
-      },
-      headStyles: {
-        fillColor: [243, 244, 246],
-        textColor: [0, 0, 0]
-      },
-      columnStyles: {
-        0: { cellWidth: 70 },
-        1: { cellWidth: 80 },
-        2: { cellWidth: 40, halign: 'right' }
-      }
-    });
-    
-    yPos = pdf.lastAutoTable.finalY + 10;
-    
-    // Summary Section
-    if (yPos > 250) {
-      pdf.addPage();
-      yPos = 20;
-    }
-    
-    pdf.setFontSize(14);
-    pdf.text('สรุป', 14, yPos);
-    yPos += 7;
-    
-    pdf.autoTable({
-      startY: yPos,
-      body: [
-        ['รายรับรวม:', `${totalIncome.toLocaleString("th-TH", { minimumFractionDigits: 2 })} บาท`],
-        ['รายจ่ายรวม:', `${totalExpense.toLocaleString("th-TH", { minimumFractionDigits: 2 })} บาท`],
-        ['เงินคงเหลือ:', `${balance.toLocaleString("th-TH", { minimumFractionDigits: 2 })} บาท`]
-      ],
-      styles: {
-        fontSize: 10,
-        cellPadding: 3
-      },
-      columnStyles: {
-        0: { cellWidth: 100 },
-        1: { cellWidth: 90, halign: 'right' }
-      },
-      theme: 'plain'
-    });
-    
-    pdf.save(`รายงานประจำเดือน_${monthName}_${year}.pdf`);
+    // Use browser's print dialog for better Thai font support
+    window.print();
   };
 
   return (
