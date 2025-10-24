@@ -3,7 +3,8 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Download, FileText, CalendarIcon } from "lucide-react";
+import { Download, FileText, CalendarIcon, Eye } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
@@ -15,6 +16,7 @@ import { cn } from "@/lib/utils";
 type PeriodType = "custom" | "monthly" | "quarterly" | "yearly";
 
 export default function Reports() {
+  const navigate = useNavigate();
   const [periodType, setPeriodType] = useState<PeriodType>("monthly");
   const [startDate, setStartDate] = useState<Date>(startOfMonth(new Date()));
   const [endDate, setEndDate] = useState<Date>(endOfMonth(new Date()));
@@ -395,10 +397,11 @@ export default function Reports() {
                   <th className="text-right py-3 px-4 font-medium">รายจ่าย</th>
                   <th className="text-right py-3 px-4 font-medium">สุทธิ</th>
                   <th className="text-right py-3 px-4 font-medium">อัตรากำไร</th>
+                  <th className="text-center py-3 px-4 font-medium">รายละเอียด</th>
                 </tr>
               </thead>
               <tbody>
-                {monthlyComparison.map((row) => (
+                {monthlyComparison.map((row, index) => (
                   <tr key={row.month} className="border-b border-border hover:bg-accent/50">
                     <td className="py-3 px-4">{row.month}</td>
                     <td className="text-right py-3 px-4 text-income font-medium">
@@ -412,6 +415,16 @@ export default function Reports() {
                     </td>
                     <td className="text-right py-3 px-4">
                       {row.income > 0 ? ((row.net / row.income) * 100).toFixed(1) : "0.0"}%
+                    </td>
+                    <td className="text-center py-3 px-4">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => navigate(`/monthly-detail/${currentYear}/${index + 1}`)}
+                        className="h-8 w-8 p-0"
+                      >
+                        <Eye className="h-4 w-4" />
+                      </Button>
                     </td>
                   </tr>
                 ))}
@@ -430,6 +443,7 @@ export default function Reports() {
                   <td className="text-right py-3 px-4">
                     {totalsRow.income > 0 ? ((totalsRow.net / totalsRow.income) * 100).toFixed(1) : "0.0"}%
                   </td>
+                  <td></td>
                 </tr>
               </tbody>
             </table>

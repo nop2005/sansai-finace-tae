@@ -9,6 +9,7 @@ import Income from "./pages/Income";
 import Expense from "./pages/Expense";
 import Transactions from "./pages/Transactions";
 import Reports from "./pages/Reports";
+import MonthlyDetail from "./pages/MonthlyDetail";
 import Settings from "./pages/Settings";
 import Auth from "./pages/Auth";
 import UserManagement from "./pages/UserManagement";
@@ -32,6 +33,7 @@ const App = () => (
           <Route path="/expense" element={<Layout><Expense /></Layout>} />
           <Route path="/transactions" element={<Layout><Transactions /></Layout>} />
           <Route path="/reports" element={<Layout><Reports /></Layout>} />
+          <Route path="/monthly-detail/:year/:month" element={<Layout><MonthlyDetail /></Layout>} />
           <Route path="/settings" element={<Layout><Settings /></Layout>} />
           <Route path="/user-management" element={<Layout><UserManagement /></Layout>} />
           <Route path="/permissions" element={<Layout><PermissionsManagement /></Layout>} />
