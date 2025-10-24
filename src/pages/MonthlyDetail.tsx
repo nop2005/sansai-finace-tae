@@ -7,25 +7,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { format, startOfMonth, endOfMonth } from "date-fns";
 import { th } from "date-fns/locale";
 import * as XLSX from 'xlsx';
-import pdfMake from 'pdfmake/build/pdfmake';
-import pdfFonts from 'pdfmake/build/vfs_fonts';
-
-// Configure Thai font support
-pdfMake.vfs = pdfFonts.pdfMake.vfs;
-pdfMake.fonts = {
-  THSarabunNew: {
-    normal: 'Roboto-Regular.ttf',
-    bold: 'Roboto-Medium.ttf',
-    italics: 'Roboto-Italic.ttf',
-    bolditalics: 'Roboto-MediumItalic.ttf'
-  },
-  Roboto: {
-    normal: 'Roboto-Regular.ttf',
-    bold: 'Roboto-Medium.ttf',
-    italics: 'Roboto-Italic.ttf',
-    bolditalics: 'Roboto-MediumItalic.ttf'
-  }
-};
+import html2canvas from 'html2canvas';
+import jsPDF from 'jspdf';
 
 export default function MonthlyDetail() {
   const navigate = useNavigate();
@@ -312,129 +295,157 @@ export default function MonthlyDetail() {
     XLSX.writeFile(wb, `รายงานประจำเดือน_${monthName}_${year}.xlsx`);
   };
 
-  const handlePrintPDF = () => {
-    // Income table rows
-    const incomeTableBody: any[] = [];
+
+  const handlePrintPDF = async () => {
+    // Create a temporary container for the PDF content
+    const pdfContent = document.createElement('div');
+    pdfContent.style.padding = '40px';
+    pdfContent.style.backgroundColor = 'white';
+    pdfContent.style.fontFamily = 'Sarabun, sans-serif';
+    pdfContent.style.width = '800px';
+    pdfContent.style.color = '#000';
+
+    // Build the HTML content
+    let htmlContent = `
+      <div style="text-align: center; margin-bottom: 30px;">
+        <h1 style="font-size: 24px; font-weight: bold; margin-bottom: 10px;">สรุปบัญชีประจำเดือน ${monthName} ${year}</h1>
+      </div>
+
+      <div style="margin-bottom: 30px;">
+        <h2 style="font-size: 18px; font-weight: bold; margin-bottom: 15px;">รายละเอียดรายรับ</h2>
+        <table style="width: 100%; border-collapse: collapse;">
+          <thead>
+            <tr style="background-color: #f3f4f6;">
+              <th style="border: 1px solid #d1d5db; padding: 10px; text-align: left; font-weight: bold;">หมวดรายรับ</th>
+              <th style="border: 1px solid #d1d5db; padding: 10px; text-align: left; font-weight: bold;">รายการรายรับ</th>
+              <th style="border: 1px solid #d1d5db; padding: 10px; text-align: right; font-weight: bold;">เดือน ${monthName} ${year}</th>
+            </tr>
+          </thead>
+          <tbody>
+    `;
+
     incomeByCategory.forEach((categoryData, catIndex) => {
-      incomeTableBody.push([
-        { text: `${catIndex + 1}. ${categoryData.category.name}`, bold: true, colSpan: 2 },
-        {},
-        ''
-      ]);
+      htmlContent += `
+        <tr>
+          <td colspan="2" style="border: 1px solid #d1d5db; padding: 10px; font-weight: bold;">${catIndex + 1}. ${categoryData.category.name}</td>
+          <td style="border: 1px solid #d1d5db; padding: 10px;"></td>
+        </tr>
+      `;
       categoryData.items.forEach((item, itemIndex) => {
-        incomeTableBody.push([
-          '',
-          `${catIndex + 1}.${itemIndex + 1} ${item.name}`,
-          { text: item.total.toLocaleString("th-TH", { minimumFractionDigits: 2 }), alignment: 'right' }
-        ]);
+        htmlContent += `
+          <tr>
+            <td style="border: 1px solid #d1d5db; padding: 10px;"></td>
+            <td style="border: 1px solid #d1d5db; padding: 10px;">${catIndex + 1}.${itemIndex + 1} ${item.name}</td>
+            <td style="border: 1px solid #d1d5db; padding: 10px; text-align: right;">${item.total.toLocaleString("th-TH", { minimumFractionDigits: 2 })}</td>
+          </tr>
+        `;
       });
     });
-    incomeTableBody.push([
-      { text: 'รวมรายรับทั้งหมด', bold: true, colSpan: 2 },
-      {},
-      { text: totalIncome.toLocaleString("th-TH", { minimumFractionDigits: 2 }), alignment: 'right', bold: true }
-    ]);
 
-    // Expense table rows
-    const expenseTableBody: any[] = [];
+    htmlContent += `
+          <tr style="background-color: #f3f4f6;">
+            <td colspan="2" style="border: 1px solid #d1d5db; padding: 10px; font-weight: bold;">รวมรายรับทั้งหมด</td>
+            <td style="border: 1px solid #d1d5db; padding: 10px; text-align: right; font-weight: bold;">${totalIncome.toLocaleString("th-TH", { minimumFractionDigits: 2 })}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div style="margin-bottom: 30px;">
+      <h2 style="font-size: 18px; font-weight: bold; margin-bottom: 15px;">รายละเอียดรายจ่าย</h2>
+      <table style="width: 100%; border-collapse: collapse;">
+        <thead>
+          <tr style="background-color: #f3f4f6;">
+            <th style="border: 1px solid #d1d5db; padding: 10px; text-align: left; font-weight: bold;">หมวดรายจ่าย</th>
+            <th style="border: 1px solid #d1d5db; padding: 10px; text-align: left; font-weight: bold;">รายการรายจ่าย</th>
+            <th style="border: 1px solid #d1d5db; padding: 10px; text-align: right; font-weight: bold;">เดือน ${monthName} ${year}</th>
+          </tr>
+        </thead>
+        <tbody>
+    `;
+
     expenseByCategory.forEach((categoryData, catIndex) => {
-      expenseTableBody.push([
-        { text: `${catIndex + 1}. ${categoryData.category.name}`, bold: true, colSpan: 2 },
-        {},
-        ''
-      ]);
+      htmlContent += `
+        <tr>
+          <td colspan="2" style="border: 1px solid #d1d5db; padding: 10px; font-weight: bold;">${catIndex + 1}. ${categoryData.category.name}</td>
+          <td style="border: 1px solid #d1d5db; padding: 10px;"></td>
+        </tr>
+      `;
       categoryData.items.forEach((item, itemIndex) => {
-        expenseTableBody.push([
-          '',
-          `${catIndex + 1}.${itemIndex + 1} ${item.name}`,
-          { text: item.total.toLocaleString("th-TH", { minimumFractionDigits: 2 }), alignment: 'right' }
-        ]);
+        htmlContent += `
+          <tr>
+            <td style="border: 1px solid #d1d5db; padding: 10px;"></td>
+            <td style="border: 1px solid #d1d5db; padding: 10px;">${catIndex + 1}.${itemIndex + 1} ${item.name}</td>
+            <td style="border: 1px solid #d1d5db; padding: 10px; text-align: right;">${item.total.toLocaleString("th-TH", { minimumFractionDigits: 2 })}</td>
+          </tr>
+        `;
       });
     });
-    expenseTableBody.push([
-      { text: 'รวมรายจ่ายทั้งหมด', bold: true, colSpan: 2 },
-      {},
-      { text: totalExpense.toLocaleString("th-TH", { minimumFractionDigits: 2 }), alignment: 'right', bold: true }
-    ]);
 
-    const documentDefinition: any = {
-      content: [
-        { text: `สรุปบัญชีประจำเดือน ${monthName} ${year}`, style: 'header' },
-        { text: 'รายละเอียดรายรับ', style: 'subheader' },
-        {
-          table: {
-            body: [
-              [
-                { text: 'หมวดรายรับ', style: 'tableHeader' },
-                { text: 'รายการรายรับ', style: 'tableHeader' },
-                { text: `เดือน ${monthName} ${year}`, style: 'tableHeader', alignment: 'right' }
-              ],
-              ...incomeTableBody
-            ]
-          },
-          layout: 'lightHorizontalLines'
-        },
-        { text: 'รายละเอียดรายจ่าย', style: 'subheader', margin: [0, 20, 0, 0] },
-        {
-          table: {
-            body: [
-              [
-                { text: 'หมวดรายจ่าย', style: 'tableHeader' },
-                { text: 'รายการรายจ่าย', style: 'tableHeader' },
-                { text: `เดือน ${monthName} ${year}`, style: 'tableHeader', alignment: 'right' }
-              ],
-              ...expenseTableBody
-            ]
-          },
-          layout: 'lightHorizontalLines'
-        },
-        { text: 'สรุป', style: 'subheader', margin: [0, 20, 0, 0] },
-        {
-          columns: [
-            { text: 'รายรับรวม:', width: 'auto' },
-            { text: totalIncome.toLocaleString("th-TH", { minimumFractionDigits: 2 }), alignment: 'right', width: '*' }
-          ]
-        },
-        {
-          columns: [
-            { text: 'รายจ่ายรวม:', width: 'auto' },
-            { text: totalExpense.toLocaleString("th-TH", { minimumFractionDigits: 2 }), alignment: 'right', width: '*' }
-          ]
-        },
-        {
-          columns: [
-            { text: 'เงินคงเหลือ:', style: 'bold', width: 'auto' },
-            { text: balance.toLocaleString("th-TH", { minimumFractionDigits: 2 }), alignment: 'right', width: '*' }
-          ]
-        }
-      ],
-      styles: {
-        header: {
-          fontSize: 18,
-          bold: true,
-          margin: [0, 0, 0, 15],
-          alignment: 'center'
-        },
-        subheader: {
-          fontSize: 14,
-          bold: true,
-          margin: [0, 10, 0, 10]
-        },
-        tableHeader: {
-          bold: true,
-          fontSize: 12
-        },
-        bold: {
-          bold: true
-        }
-      },
-      defaultStyle: {
-        font: 'THSarabunNew',
-        fontSize: 16
-      },
-    };
+    htmlContent += `
+          <tr style="background-color: #f3f4f6;">
+            <td colspan="2" style="border: 1px solid #d1d5db; padding: 10px; font-weight: bold;">รวมรายจ่ายทั้งหมด</td>
+            <td style="border: 1px solid #d1d5db; padding: 10px; text-align: right; font-weight: bold;">${totalExpense.toLocaleString("th-TH", { minimumFractionDigits: 2 })}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
 
-    pdfMake.createPdf(documentDefinition).download(`รายงานประจำเดือน_${monthName}_${year}.pdf`);
+    <div style="margin-top: 30px; padding: 20px; background-color: #f9fafb; border-radius: 8px;">
+      <h2 style="font-size: 18px; font-weight: bold; margin-bottom: 15px;">สรุป</h2>
+      <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+        <span>รายรับรวม:</span>
+        <span style="font-weight: bold;">${totalIncome.toLocaleString("th-TH", { minimumFractionDigits: 2 })} บาท</span>
+      </div>
+      <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+        <span>รายจ่ายรวม:</span>
+        <span style="font-weight: bold;">${totalExpense.toLocaleString("th-TH", { minimumFractionDigits: 2 })} บาท</span>
+      </div>
+      <div style="display: flex; justify-content: space-between; padding-top: 10px; border-top: 2px solid #d1d5db;">
+        <span style="font-weight: bold;">เงินคงเหลือ:</span>
+        <span style="font-weight: bold; font-size: 18px;">${balance.toLocaleString("th-TH", { minimumFractionDigits: 2 })} บาท</span>
+      </div>
+    </div>
+    `;
+
+    pdfContent.innerHTML = htmlContent;
+    document.body.appendChild(pdfContent);
+
+    try {
+      // Convert HTML to canvas
+      const canvas = await html2canvas(pdfContent, {
+        scale: 2,
+        useCORS: true,
+        logging: false,
+      });
+
+      // Create PDF
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      const imgWidth = 210; // A4 width in mm
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      
+      let heightLeft = imgHeight;
+      let position = 0;
+
+      // Add first page
+      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+      heightLeft -= 297; // A4 height in mm
+
+      // Add additional pages if content is longer than one page
+      while (heightLeft > 0) {
+        position = heightLeft - imgHeight;
+        pdf.addPage();
+        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+        heightLeft -= 297;
+      }
+
+      // Download the PDF
+      pdf.save(`รายงานประจำเดือน_${monthName}_${year}.pdf`);
+    } finally {
+      // Clean up: remove the temporary element
+      document.body.removeChild(pdfContent);
+    }
   };
 
   return (
