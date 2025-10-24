@@ -7,7 +7,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { format, startOfMonth, endOfMonth } from "date-fns";
 import { th } from "date-fns/locale";
 import * as XLSX from 'xlsx';
-import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
+import jsPDF from 'jspdf';
+import { loadFontAsBase64 } from '@/utils/thaiFont';
 
 export default function MonthlyDetail() {
   const navigate = useNavigate();
@@ -297,219 +298,142 @@ export default function MonthlyDetail() {
 
   const handlePrintPDF = async () => {
     try {
-      // Create a new PDF document
-      const pdfDoc = await PDFDocument.create();
+      // Load Thai font
+      const fontBase64 = await loadFontAsBase64('/fonts/THSarabunNew.ttf');
+      const fontBoldBase64 = await loadFontAsBase64('/fonts/THSarabunNew-Bold.ttf');
       
-      // Embed the font
-      const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
-      const fontBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+      // Create PDF
+      const doc = new jsPDF();
       
-      // Add a page
-      let page = pdfDoc.addPage([595, 842]); // A4 size
-      const { width, height } = page.getSize();
+      // Add Thai font
+      doc.addFileToVFS("THSarabunNew.ttf", fontBase64);
+      doc.addFont("THSarabunNew.ttf", "THSarabunNew", "normal");
       
-      let yPosition = height - 50;
+      doc.addFileToVFS("THSarabunNew-Bold.ttf", fontBoldBase64);
+      doc.addFont("THSarabunNew-Bold.ttf", "THSarabunNew", "bold");
+      
+      doc.setFont("THSarabunNew");
+      
+      let yPosition = 20;
       
       // Title
-      page.drawText(`Saraban Prajam Duean ${monthName} ${year}`, {
-        x: 50,
-        y: yPosition,
-        size: 18,
-        font: fontBold,
-      });
-      yPosition -= 30;
+      doc.setFontSize(18);
+      doc.setFont("THSarabunNew", "bold");
+      doc.text(`รายงานประจำเดือน ${monthName} ${year}`, 105, yPosition, { align: 'center' });
+      yPosition += 10;
       
       // Income Section
-      page.drawText('Raileeid Rayrub', {
-        x: 50,
-        y: yPosition,
-        size: 14,
-        font: fontBold,
-      });
-      yPosition -= 20;
+      doc.setFontSize(14);
+      doc.setFont("THSarabunNew", "bold");
+      doc.text('รายรับ', 20, yPosition);
+      yPosition += 7;
       
-      // Income table header
-      page.drawText('Category', { x: 50, y: yPosition, size: 10, font: fontBold });
-      page.drawText('Item', { x: 200, y: yPosition, size: 10, font: fontBold });
-      page.drawText('Amount', { x: 450, y: yPosition, size: 10, font: fontBold });
-      yPosition -= 15;
+      doc.setFontSize(10);
+      doc.setFont("THSarabunNew", "bold");
+      doc.text('หมวดหมู่', 20, yPosition);
+      doc.text('รายการ', 80, yPosition);
+      doc.text('จำนวนเงิน', 150, yPosition);
+      yPosition += 5;
       
-      // Income data
+      doc.setFont("THSarabunNew", "normal");
       incomeByCategory.forEach((categoryData, catIndex) => {
-        if (yPosition < 50) {
-          page = pdfDoc.addPage([595, 842]);
-          yPosition = height - 50;
+        if (yPosition > 270) {
+          doc.addPage();
+          yPosition = 20;
         }
         
-        page.drawText(`${catIndex + 1}. ${categoryData.category.name}`, {
-          x: 50,
-          y: yPosition,
-          size: 10,
-          font: fontBold,
-        });
-        yPosition -= 15;
+        doc.setFont("THSarabunNew", "bold");
+        doc.text(`${catIndex + 1}. ${categoryData.category.name}`, 20, yPosition);
+        yPosition += 5;
         
+        doc.setFont("THSarabunNew", "normal");
         categoryData.items.forEach((item, itemIndex) => {
-          if (yPosition < 50) {
-            page = pdfDoc.addPage([595, 842]);
-            yPosition = height - 50;
+          if (yPosition > 270) {
+            doc.addPage();
+            yPosition = 20;
           }
           
-          page.drawText(`${catIndex + 1}.${itemIndex + 1} ${item.name}`, {
-            x: 200,
-            y: yPosition,
-            size: 10,
-            font,
-          });
-          
-          page.drawText(item.total.toLocaleString('th-TH', { minimumFractionDigits: 2 }), {
-            x: 450,
-            y: yPosition,
-            size: 10,
-            font,
-          });
-          yPosition -= 15;
+          doc.text(`${catIndex + 1}.${itemIndex + 1} ${item.name}`, 80, yPosition);
+          doc.text(item.total.toLocaleString('th-TH', { minimumFractionDigits: 2 }), 150, yPosition);
+          yPosition += 5;
         });
       });
       
       // Total Income
-      yPosition -= 5;
-      page.drawText('Total Income:', {
-        x: 50,
-        y: yPosition,
-        size: 10,
-        font: fontBold,
-      });
-      page.drawText(totalIncome.toLocaleString('th-TH', { minimumFractionDigits: 2 }), {
-        x: 450,
-        y: yPosition,
-        size: 10,
-        font: fontBold,
-      });
-      yPosition -= 30;
+      yPosition += 2;
+      doc.setFont("THSarabunNew", "bold");
+      doc.text('รวมรายรับ:', 20, yPosition);
+      doc.text(totalIncome.toLocaleString('th-TH', { minimumFractionDigits: 2 }), 150, yPosition);
+      yPosition += 10;
       
       // Expense Section
-      if (yPosition < 200) {
-        page = pdfDoc.addPage([595, 842]);
-        yPosition = height - 50;
+      if (yPosition > 250) {
+        doc.addPage();
+        yPosition = 20;
       }
       
-      page.drawText('Raileeid Rayjay', {
-        x: 50,
-        y: yPosition,
-        size: 14,
-        font: fontBold,
-      });
-      yPosition -= 20;
+      doc.setFontSize(14);
+      doc.text('รายจ่าย', 20, yPosition);
+      yPosition += 7;
       
-      // Expense table header
-      page.drawText('Category', { x: 50, y: yPosition, size: 10, font: fontBold });
-      page.drawText('Item', { x: 200, y: yPosition, size: 10, font: fontBold });
-      page.drawText('Amount', { x: 450, y: yPosition, size: 10, font: fontBold });
-      yPosition -= 15;
+      doc.setFontSize(10);
+      doc.text('หมวดหมู่', 20, yPosition);
+      doc.text('รายการ', 80, yPosition);
+      doc.text('จำนวนเงิน', 150, yPosition);
+      yPosition += 5;
       
-      // Expense data
+      doc.setFont("THSarabunNew", "normal");
       expenseByCategory.forEach((categoryData, catIndex) => {
-        if (yPosition < 50) {
-          page = pdfDoc.addPage([595, 842]);
-          yPosition = height - 50;
+        if (yPosition > 270) {
+          doc.addPage();
+          yPosition = 20;
         }
         
-        page.drawText(`${catIndex + 1}. ${categoryData.category.name}`, {
-          x: 50,
-          y: yPosition,
-          size: 10,
-          font: fontBold,
-        });
-        yPosition -= 15;
+        doc.setFont("THSarabunNew", "bold");
+        doc.text(`${catIndex + 1}. ${categoryData.category.name}`, 20, yPosition);
+        yPosition += 5;
         
+        doc.setFont("THSarabunNew", "normal");
         categoryData.items.forEach((item, itemIndex) => {
-          if (yPosition < 50) {
-            page = pdfDoc.addPage([595, 842]);
-            yPosition = height - 50;
+          if (yPosition > 270) {
+            doc.addPage();
+            yPosition = 20;
           }
           
-          page.drawText(`${catIndex + 1}.${itemIndex + 1} ${item.name}`, {
-            x: 200,
-            y: yPosition,
-            size: 10,
-            font,
-          });
-          
-          page.drawText(item.total.toLocaleString('th-TH', { minimumFractionDigits: 2 }), {
-            x: 450,
-            y: yPosition,
-            size: 10,
-            font,
-          });
-          yPosition -= 15;
+          doc.text(`${catIndex + 1}.${itemIndex + 1} ${item.name}`, 80, yPosition);
+          doc.text(item.total.toLocaleString('th-TH', { minimumFractionDigits: 2 }), 150, yPosition);
+          yPosition += 5;
         });
       });
       
       // Total Expense
-      yPosition -= 5;
-      page.drawText('Total Expense:', {
-        x: 50,
-        y: yPosition,
-        size: 10,
-        font: fontBold,
-      });
-      page.drawText(totalExpense.toLocaleString('th-TH', { minimumFractionDigits: 2 }), {
-        x: 450,
-        y: yPosition,
-        size: 10,
-        font: fontBold,
-      });
-      yPosition -= 30;
+      yPosition += 2;
+      doc.setFont("THSarabunNew", "bold");
+      doc.text('รวมรายจ่าย:', 20, yPosition);
+      doc.text(totalExpense.toLocaleString('th-TH', { minimumFractionDigits: 2 }), 150, yPosition);
+      yPosition += 10;
       
       // Summary
-      if (yPosition < 100) {
-        page = pdfDoc.addPage([595, 842]);
-        yPosition = height - 50;
+      if (yPosition > 250) {
+        doc.addPage();
+        yPosition = 20;
       }
       
-      page.drawText('Summary', {
-        x: 50,
-        y: yPosition,
-        size: 14,
-        font: fontBold,
-      });
-      yPosition -= 20;
+      doc.setFontSize(14);
+      doc.text('สรุป', 20, yPosition);
+      yPosition += 7;
       
-      page.drawText(`Total Income: ${totalIncome.toLocaleString('th-TH', { minimumFractionDigits: 2 })} Baht`, {
-        x: 50,
-        y: yPosition,
-        size: 10,
-        font,
-      });
-      yPosition -= 15;
+      doc.setFontSize(10);
+      doc.text(`รวมรายรับ: ${totalIncome.toLocaleString('th-TH', { minimumFractionDigits: 2 })} บาท`, 20, yPosition);
+      yPosition += 5;
       
-      page.drawText(`Total Expense: ${totalExpense.toLocaleString('th-TH', { minimumFractionDigits: 2 })} Baht`, {
-        x: 50,
-        y: yPosition,
-        size: 10,
-        font,
-      });
-      yPosition -= 15;
+      doc.text(`รวมรายจ่าย: ${totalExpense.toLocaleString('th-TH', { minimumFractionDigits: 2 })} บาท`, 20, yPosition);
+      yPosition += 5;
       
-      page.drawText(`Balance: ${balance.toLocaleString('th-TH', { minimumFractionDigits: 2 })} Baht`, {
-        x: 50,
-        y: yPosition,
-        size: 10,
-        font: fontBold,
-      });
+      doc.text(`ยอดคงเหลือ: ${balance.toLocaleString('th-TH', { minimumFractionDigits: 2 })} บาท`, 20, yPosition);
       
-      // Save the PDF
-      const pdfBytes = await pdfDoc.save();
-      
-      // Download the PDF
-      const blob = new Blob([new Uint8Array(pdfBytes)], { type: 'application/pdf' });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `รายงานประจำเดือน_${monthName}_${year}.pdf`;
-      link.click();
-      URL.revokeObjectURL(url);
+      // Save PDF
+      doc.save(`รายงานประจำเดือน_${monthName}_${year}.pdf`);
     } catch (error) {
       console.error('Error generating PDF:', error);
     }
