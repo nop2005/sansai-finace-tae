@@ -10,7 +10,8 @@ import * as XLSX from 'xlsx';
 import pdfMake from 'pdfmake/build/pdfmake';
 import pdfFonts from 'pdfmake/build/vfs_fonts';
 
-pdfMake.vfs = pdfFonts.pdfMake.vfs;
+// @ts-ignore
+pdfMake.vfs = pdfFonts;
 
 export default function MonthlyDetail() {
   const navigate = useNavigate();
@@ -414,21 +415,11 @@ export default function MonthlyDetail() {
         }
       },
       defaultStyle: {
-        font: 'THSarabunNew',
-        fontSize: 12
+        fontSize: 14
       },
     };
 
-    pdfMake.fonts = {
-      THSarabunNew: {
-        normal: 'THSarabunNew.ttf',
-        bold: 'THSarabunNew Bold.ttf',
-        italics: 'THSarabunNew Italic.ttf',
-        bolditalics: 'THSarabunNew BoldItalic.ttf'
-      }
-    }
-
-    pdfMake.createPdf(documentDefinition).open();
+    pdfMake.createPdf(documentDefinition).download(`รายงานประจำเดือน_${monthName}_${year}.pdf`);
   };
 
   return (
