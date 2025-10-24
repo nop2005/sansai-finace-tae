@@ -1,15 +1,15 @@
 import { Document, Page, Text, View, StyleSheet, Font } from '@react-pdf/renderer';
 
-// Register Thai font from Google Fonts
+// Register Thai font from local files
 Font.register({
   family: 'Sarabun',
   fonts: [
     {
-      src: 'http://fonts.gstatic.com/s/sarabun/v13/DtVjJx26TKEr37c9YHZJmnYI5gnOpg.ttf',
+      src: '/fonts/Sarabun-Regular.ttf',
       fontWeight: 400,
     },
     {
-      src: 'http://fonts.gstatic.com/s/sarabun/v13/DtVmJx26TKEr37c9YNpoulwm6gDXvwE.ttf',
+      src: '/fonts/Sarabun-Bold.ttf',
       fontWeight: 700,
     },
   ],
