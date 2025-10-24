@@ -298,55 +298,65 @@ export default function MonthlyDetail() {
 
   const handlePrintPDF = async () => {
     try {
-      // Load Thai font
+      console.log('Starting PDF generation...');
+      
+      // Load Thai font as base64
       const fontBase64 = await loadFontAsBase64('/fonts/THSarabunNew.ttf');
       const fontBoldBase64 = await loadFontAsBase64('/fonts/THSarabunNew-Bold.ttf');
       
-      // Create PDF
-      const doc = new jsPDF();
+      console.log('Fonts loaded');
       
-      // Add Thai font
+      // Create PDF with jsPDF
+      const doc = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: 'a4'
+      });
+      
+      // Register Thai fonts using jsPDF API events
       doc.addFileToVFS("THSarabunNew.ttf", fontBase64);
-      doc.addFont("THSarabunNew.ttf", "THSarabunNew", "normal");
+      doc.addFont("THSarabunNew.ttf", "THSarabun", "normal");
       
       doc.addFileToVFS("THSarabunNew-Bold.ttf", fontBoldBase64);
-      doc.addFont("THSarabunNew-Bold.ttf", "THSarabunNew", "bold");
+      doc.addFont("THSarabunNew-Bold.ttf", "THSarabun", "bold");
       
-      doc.setFont("THSarabunNew");
+      // Set default font
+      doc.setFont("THSarabun", "normal");
+      
+      console.log('Fonts registered');
       
       let yPosition = 20;
+      const pageWidth = doc.internal.pageSize.getWidth();
       
       // Title
       doc.setFontSize(18);
-      doc.setFont("THSarabunNew", "bold");
-      doc.text(`รายงานประจำเดือน ${monthName} ${year}`, 105, yPosition, { align: 'center' });
+      doc.setFont("THSarabun", "bold");
+      doc.text(`รายงานประจำเดือน ${monthName} ${year}`, pageWidth / 2, yPosition, { align: 'center' });
       yPosition += 10;
       
       // Income Section
       doc.setFontSize(14);
-      doc.setFont("THSarabunNew", "bold");
       doc.text('รายรับ', 20, yPosition);
       yPosition += 7;
       
       doc.setFontSize(10);
-      doc.setFont("THSarabunNew", "bold");
       doc.text('หมวดหมู่', 20, yPosition);
       doc.text('รายการ', 80, yPosition);
       doc.text('จำนวนเงิน', 150, yPosition);
       yPosition += 5;
       
-      doc.setFont("THSarabunNew", "normal");
+      doc.setFont("THSarabun", "normal");
       incomeByCategory.forEach((categoryData, catIndex) => {
         if (yPosition > 270) {
           doc.addPage();
           yPosition = 20;
         }
         
-        doc.setFont("THSarabunNew", "bold");
+        doc.setFont("THSarabun", "bold");
         doc.text(`${catIndex + 1}. ${categoryData.category.name}`, 20, yPosition);
         yPosition += 5;
         
-        doc.setFont("THSarabunNew", "normal");
+        doc.setFont("THSarabun", "normal");
         categoryData.items.forEach((item, itemIndex) => {
           if (yPosition > 270) {
             doc.addPage();
@@ -361,7 +371,7 @@ export default function MonthlyDetail() {
       
       // Total Income
       yPosition += 2;
-      doc.setFont("THSarabunNew", "bold");
+      doc.setFont("THSarabun", "bold");
       doc.text('รวมรายรับ:', 20, yPosition);
       doc.text(totalIncome.toLocaleString('th-TH', { minimumFractionDigits: 2 }), 150, yPosition);
       yPosition += 10;
@@ -382,18 +392,18 @@ export default function MonthlyDetail() {
       doc.text('จำนวนเงิน', 150, yPosition);
       yPosition += 5;
       
-      doc.setFont("THSarabunNew", "normal");
+      doc.setFont("THSarabun", "normal");
       expenseByCategory.forEach((categoryData, catIndex) => {
         if (yPosition > 270) {
           doc.addPage();
           yPosition = 20;
         }
         
-        doc.setFont("THSarabunNew", "bold");
+        doc.setFont("THSarabun", "bold");
         doc.text(`${catIndex + 1}. ${categoryData.category.name}`, 20, yPosition);
         yPosition += 5;
         
-        doc.setFont("THSarabunNew", "normal");
+        doc.setFont("THSarabun", "normal");
         categoryData.items.forEach((item, itemIndex) => {
           if (yPosition > 270) {
             doc.addPage();
@@ -408,7 +418,7 @@ export default function MonthlyDetail() {
       
       // Total Expense
       yPosition += 2;
-      doc.setFont("THSarabunNew", "bold");
+      doc.setFont("THSarabun", "bold");
       doc.text('รวมรายจ่าย:', 20, yPosition);
       doc.text(totalExpense.toLocaleString('th-TH', { minimumFractionDigits: 2 }), 150, yPosition);
       yPosition += 10;
@@ -432,8 +442,12 @@ export default function MonthlyDetail() {
       
       doc.text(`ยอดคงเหลือ: ${balance.toLocaleString('th-TH', { minimumFractionDigits: 2 })} บาท`, 20, yPosition);
       
+      console.log('PDF content added, saving...');
+      
       // Save PDF
       doc.save(`รายงานประจำเดือน_${monthName}_${year}.pdf`);
+      
+      console.log('PDF saved successfully');
     } catch (error) {
       console.error('Error generating PDF:', error);
     }
