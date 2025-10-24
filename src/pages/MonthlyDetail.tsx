@@ -7,6 +7,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { format, startOfMonth, endOfMonth } from "date-fns";
 import { th } from "date-fns/locale";
 import * as XLSX from 'xlsx';
+import { pdf } from '@react-pdf/renderer';
+import { MonthlyReportPDF } from '@/components/MonthlyReportPDF';
 
 export default function MonthlyDetail() {
   const navigate = useNavigate();
@@ -294,9 +296,27 @@ export default function MonthlyDetail() {
   };
 
 
-  const handlePrintPDF = () => {
-    // Use browser's print dialog for better Thai font support
-    window.print();
+  const handlePrintPDF = async () => {
+    const doc = (
+      <MonthlyReportPDF
+        monthName={monthName}
+        year={year || ''}
+        totalIncome={totalIncome}
+        totalExpense={totalExpense}
+        balance={balance}
+        incomeByCategory={incomeByCategory}
+        expenseByCategory={expenseByCategory}
+      />
+    );
+
+    const asPdf = pdf(doc);
+    const blob = await asPdf.toBlob();
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `รายงานประจำเดือน_${monthName}_${year}.pdf`;
+    link.click();
+    URL.revokeObjectURL(url);
   };
 
   return (
