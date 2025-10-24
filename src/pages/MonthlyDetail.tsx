@@ -1,11 +1,14 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, FileDown, Printer } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { format, startOfMonth, endOfMonth } from "date-fns";
 import { th } from "date-fns/locale";
+import * as XLSX from 'xlsx';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 export default function MonthlyDetail() {
   const navigate = useNavigate();
@@ -249,6 +252,109 @@ export default function MonthlyDetail() {
   const monthIndex = month ? parseInt(month) - 1 : 0;
   const monthName = monthNames[monthIndex];
 
+  const handleExportExcel = () => {
+    const wb = XLSX.utils.book_new();
+    
+    // Summary data
+    const summaryData = [
+      ['สรุปบัญชีประจำเดือน', `${monthName} ${year}`],
+      [],
+      ['รายรับรวม', totalIncome.toLocaleString()],
+      ['รายจ่ายรวม', totalExpense.toLocaleString()],
+      ['เงินคงเหลือ', balance.toLocaleString()],
+      []
+    ];
+
+    // Income data
+    const incomeData = [['หมวดรายรับ', 'รายการรายรับ', `เดือน ${monthName} ${year}`]];
+    incomeByCategory.forEach((categoryData, catIndex) => {
+      incomeData.push([`${catIndex + 1}. ${categoryData.category.name}`, '', '']);
+      categoryData.items.forEach((item, itemIndex) => {
+        incomeData.push(['', `${catIndex + 1}.${itemIndex + 1} ${item.name}`, item.total.toLocaleString("th-TH", { minimumFractionDigits: 2 })]);
+      });
+    });
+    incomeData.push(['รวมรายรับทั้งหมด', '', totalIncome.toLocaleString("th-TH", { minimumFractionDigits: 2 })]);
+
+    // Expense data
+    const expenseData = [[], ['หมวดรายจ่าย', 'รายการรายจ่าย', `เดือน ${monthName} ${year}`]];
+    expenseByCategory.forEach((categoryData, catIndex) => {
+      expenseData.push([`${catIndex + 1}. ${categoryData.category.name}`, '', '']);
+      categoryData.items.forEach((item, itemIndex) => {
+        expenseData.push(['', `${catIndex + 1}.${itemIndex + 1} ${item.name}`, item.total.toLocaleString("th-TH", { minimumFractionDigits: 2 })]);
+      });
+    });
+    expenseData.push(['รวมรายจ่ายทั้งหมด', '', totalExpense.toLocaleString("th-TH", { minimumFractionDigits: 2 })]);
+
+    const allData = [...summaryData, ...incomeData, ...expenseData];
+    const ws = XLSX.utils.aoa_to_sheet(allData);
+    
+    // Set column widths
+    ws['!cols'] = [{ wch: 30 }, { wch: 40 }, { wch: 20 }];
+    
+    XLSX.utils.book_append_sheet(wb, ws, 'รายงาน');
+    XLSX.writeFile(wb, `รายงานประจำเดือน_${monthName}_${year}.xlsx`);
+  };
+
+  const handlePrintPDF = () => {
+    const doc = new jsPDF();
+    
+    // Add Thai font support (using default font for now)
+    doc.setFont("helvetica");
+    
+    // Title
+    doc.setFontSize(16);
+    doc.text(`สรุปบัญชีประจำเดือน ${monthName} ${year}`, 14, 20);
+    
+    // Summary
+    doc.setFontSize(12);
+    doc.text(`รายรับรวม: ${totalIncome.toLocaleString()} บาท`, 14, 35);
+    doc.text(`รายจ่ายรวม: ${totalExpense.toLocaleString()} บาท`, 14, 42);
+    doc.text(`เงินคงเหลือ: ${balance.toLocaleString()} บาท`, 14, 49);
+    
+    let yPos = 60;
+
+    // Income table
+    const incomeTableData: any[] = [];
+    incomeByCategory.forEach((categoryData, catIndex) => {
+      incomeTableData.push([`${catIndex + 1}. ${categoryData.category.name}`, '', '']);
+      categoryData.items.forEach((item, itemIndex) => {
+        incomeTableData.push(['', `${catIndex + 1}.${itemIndex + 1} ${item.name}`, item.total.toLocaleString("th-TH", { minimumFractionDigits: 2 })]);
+      });
+    });
+    incomeTableData.push(['รวมรายรับทั้งหมด', '', totalIncome.toLocaleString("th-TH", { minimumFractionDigits: 2 })]);
+
+    autoTable(doc, {
+      head: [['หมวดรายรับ', 'รายการรายรับ', `เดือน ${monthName} ${year}`]],
+      body: incomeTableData,
+      startY: yPos,
+      theme: 'grid',
+      styles: { font: 'helvetica', fontSize: 10 },
+      headStyles: { fillColor: [34, 197, 94] }
+    });
+
+    // Expense table
+    yPos = (doc as any).lastAutoTable.finalY + 10;
+    const expenseTableData: any[] = [];
+    expenseByCategory.forEach((categoryData, catIndex) => {
+      expenseTableData.push([`${catIndex + 1}. ${categoryData.category.name}`, '', '']);
+      categoryData.items.forEach((item, itemIndex) => {
+        expenseTableData.push(['', `${catIndex + 1}.${itemIndex + 1} ${item.name}`, item.total.toLocaleString("th-TH", { minimumFractionDigits: 2 })]);
+      });
+    });
+    expenseTableData.push(['รวมรายจ่ายทั้งหมด', '', totalExpense.toLocaleString("th-TH", { minimumFractionDigits: 2 })]);
+
+    autoTable(doc, {
+      head: [['หมวดรายจ่าย', 'รายการรายจ่าย', `เดือน ${monthName} ${year}`]],
+      body: expenseTableData,
+      startY: yPos,
+      theme: 'grid',
+      styles: { font: 'helvetica', fontSize: 10 },
+      headStyles: { fillColor: [239, 68, 68] }
+    });
+
+    doc.save(`รายงานประจำเดือน_${monthName}_${year}.pdf`);
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -264,6 +370,16 @@ export default function MonthlyDetail() {
             </h1>
             <p className="text-muted-foreground mt-1">รายละเอียดรายรับ-รายจ่ายแยกตามหมวดและรายการ</p>
           </div>
+        </div>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={handlePrintPDF}>
+            <Printer className="h-4 w-4 mr-2" />
+            Print PDF
+          </Button>
+          <Button variant="outline" onClick={handleExportExcel}>
+            <FileDown className="h-4 w-4 mr-2" />
+            Export Excel
+          </Button>
         </div>
       </div>
 
