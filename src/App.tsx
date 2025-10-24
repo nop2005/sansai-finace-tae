@@ -15,6 +15,7 @@ import Auth from "./pages/Auth";
 import UserManagement from "./pages/UserManagement";
 import PermissionsManagement from "./pages/PermissionsManagement";
 import PendingApproval from "./pages/PendingApproval";
+import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -37,6 +38,7 @@ const App = () => (
           <Route path="/settings" element={<Layout><Settings /></Layout>} />
           <Route path="/user-management" element={<Layout><UserManagement /></Layout>} />
           <Route path="/permissions" element={<Layout><PermissionsManagement /></Layout>} />
+          <Route path="/profile" element={<Layout><Profile /></Layout>} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

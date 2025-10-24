@@ -10,12 +10,22 @@ import {
   X,
   Users,
   Shield,
-  LogOut
+  LogOut,
+  UserCircle,
+  ChevronDown
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import hospitalLogo from "@/assets/hospital-logo-nav.png";
 
 const allNavigation = [
@@ -207,20 +217,40 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           </nav>
 
           {/* Footer */}
-          <div className="pt-4 border-t border-sidebar-border space-y-2">
-            <p className="text-xs text-muted-foreground px-2">
-              {user?.email}
-            </p>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleLogout}
-              disabled={isLoggingOut}
-              className="w-full justify-start text-muted-foreground hover:text-foreground"
-            >
-              <LogOut className="h-4 w-4 mr-2" />
-              {isLoggingOut ? "กำลังออกจากระบบ..." : "ออกจากระบบ"}
-            </Button>
+          <div className="pt-4 border-t border-sidebar-border">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  className="w-full justify-between text-left font-normal"
+                >
+                  <div className="flex items-center gap-2 min-w-0">
+                    <UserCircle className="h-5 w-5 flex-shrink-0" />
+                    <span className="text-sm truncate">{user?.email}</span>
+                  </div>
+                  <ChevronDown className="h-4 w-4 flex-shrink-0 opacity-50" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuLabel>บัญชีของฉัน</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem asChild>
+                  <Link to="/profile" className="flex items-center cursor-pointer">
+                    <UserCircle className="mr-2 h-4 w-4" />
+                    <span>ข้อมูลส่วนตัว</span>
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  onClick={handleLogout}
+                  disabled={isLoggingOut}
+                  className="text-destructive focus:text-destructive cursor-pointer"
+                >
+                  <LogOut className="mr-2 h-4 w-4" />
+                  <span>{isLoggingOut ? "กำลังออกจากระบบ..." : "ออกจากระบบ"}</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
       </aside>
