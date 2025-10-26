@@ -267,20 +267,20 @@ export default function MonthlyDetail() {
 
     // Income data
     const incomeData = [['หมวดรายรับ', 'รายการรายรับ', `เดือน ${monthName} ${year}`]];
-    incomeByCategory.forEach((categoryData, catIndex) => {
-      incomeData.push([`${catIndex + 1}. ${categoryData.category.name}`, '', '']);
-      categoryData.items.forEach((item, itemIndex) => {
-        incomeData.push(['', `${catIndex + 1}.${itemIndex + 1} ${item.name}`, item.total.toLocaleString("th-TH", { minimumFractionDigits: 2 })]);
+    incomeByCategory.forEach((categoryData) => {
+      incomeData.push([categoryData.category.name, '', '']);
+      categoryData.items.forEach((item) => {
+        incomeData.push(['', item.name, item.total.toLocaleString("th-TH", { minimumFractionDigits: 2 })]);
       });
     });
     incomeData.push(['รวมรายรับทั้งหมด', '', totalIncome.toLocaleString("th-TH", { minimumFractionDigits: 2 })]);
 
     // Expense data
     const expenseData = [[], ['หมวดรายจ่าย', 'รายการรายจ่าย', `เดือน ${monthName} ${year}`]];
-    expenseByCategory.forEach((categoryData, catIndex) => {
-      expenseData.push([`${catIndex + 1}. ${categoryData.category.name}`, '', '']);
-      categoryData.items.forEach((item, itemIndex) => {
-        expenseData.push(['', `${catIndex + 1}.${itemIndex + 1} ${item.name}`, item.total.toLocaleString("th-TH", { minimumFractionDigits: 2 })]);
+    expenseByCategory.forEach((categoryData) => {
+      expenseData.push([categoryData.category.name, '', '']);
+      categoryData.items.forEach((item) => {
+        expenseData.push(['', item.name, item.total.toLocaleString("th-TH", { minimumFractionDigits: 2 })]);
       });
     });
     expenseData.push(['รวมรายจ่ายทั้งหมด', '', totalExpense.toLocaleString("th-TH", { minimumFractionDigits: 2 })]);
@@ -346,24 +346,24 @@ export default function MonthlyDetail() {
       yPosition += 5;
       
       doc.setFont("THSarabun", "normal");
-      incomeByCategory.forEach((categoryData, catIndex) => {
+      incomeByCategory.forEach((categoryData) => {
         if (yPosition > 270) {
           doc.addPage();
           yPosition = 20;
         }
         
         doc.setFont("THSarabun", "bold");
-        doc.text(`${catIndex + 1}. ${categoryData.category.name}`, 20, yPosition);
+        doc.text(categoryData.category.name, 20, yPosition);
         yPosition += 5;
         
         doc.setFont("THSarabun", "normal");
-        categoryData.items.forEach((item, itemIndex) => {
+        categoryData.items.forEach((item) => {
           if (yPosition > 270) {
             doc.addPage();
             yPosition = 20;
           }
           
-          doc.text(`${catIndex + 1}.${itemIndex + 1} ${item.name}`, 80, yPosition);
+          doc.text(item.name, 80, yPosition);
           doc.text(item.total.toLocaleString('th-TH', { minimumFractionDigits: 2 }), 150, yPosition);
           yPosition += 5;
         });
@@ -393,24 +393,24 @@ export default function MonthlyDetail() {
       yPosition += 5;
       
       doc.setFont("THSarabun", "normal");
-      expenseByCategory.forEach((categoryData, catIndex) => {
+      expenseByCategory.forEach((categoryData) => {
         if (yPosition > 270) {
           doc.addPage();
           yPosition = 20;
         }
         
         doc.setFont("THSarabun", "bold");
-        doc.text(`${catIndex + 1}. ${categoryData.category.name}`, 20, yPosition);
+        doc.text(categoryData.category.name, 20, yPosition);
         yPosition += 5;
         
         doc.setFont("THSarabun", "normal");
-        categoryData.items.forEach((item, itemIndex) => {
+        categoryData.items.forEach((item) => {
           if (yPosition > 270) {
             doc.addPage();
             yPosition = 20;
           }
           
-          doc.text(`${catIndex + 1}.${itemIndex + 1} ${item.name}`, 80, yPosition);
+          doc.text(item.name, 80, yPosition);
           doc.text(item.total.toLocaleString('th-TH', { minimumFractionDigits: 2 }), 150, yPosition);
           yPosition += 5;
         });
@@ -534,16 +534,16 @@ export default function MonthlyDetail() {
                     {/* Category Header */}
                     <tr key={`cat-${catIndex}`} className="bg-accent/30 font-semibold">
                       <td className="py-3 px-4" colSpan={2}>
-                        {catIndex + 1}. {categoryData.category.name}
+                        {categoryData.category.name}
                       </td>
                       <td className="text-right py-3 px-4"></td>
                     </tr>
                     {/* Items */}
-                    {categoryData.items.map((item, itemIndex) => (
+                    {categoryData.items.map((item) => (
                       <tr key={`item-${item.id}`} className="border-b border-border hover:bg-accent/20">
                         <td className="py-2 px-4"></td>
                         <td className="py-2 px-4 pl-8">
-                          {catIndex + 1}.{itemIndex + 1} {item.name}
+                          {item.name}
                         </td>
                         <td className="text-right py-2 px-4 text-income font-medium">
                           {item.total.toLocaleString("th-TH", { minimumFractionDigits: 2 })}
@@ -586,16 +586,16 @@ export default function MonthlyDetail() {
                     {/* Category Header */}
                     <tr key={`cat-${catIndex}`} className="bg-accent/30 font-semibold">
                       <td className="py-3 px-4" colSpan={2}>
-                        {catIndex + 1}. {categoryData.category.name}
+                        {categoryData.category.name}
                       </td>
                       <td className="text-right py-3 px-4"></td>
                     </tr>
                     {/* Items */}
-                    {categoryData.items.map((item, itemIndex) => (
+                    {categoryData.items.map((item) => (
                       <tr key={`item-${item.id}`} className="border-b border-border hover:bg-accent/20">
                         <td className="py-2 px-4"></td>
                         <td className="py-2 px-4 pl-8">
-                          {catIndex + 1}.{itemIndex + 1} {item.name}
+                          {item.name}
                         </td>
                         <td className="text-right py-2 px-4 text-expense font-medium">
                           {item.total.toLocaleString("th-TH", { minimumFractionDigits: 2 })}
