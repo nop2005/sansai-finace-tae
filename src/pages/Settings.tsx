@@ -49,16 +49,21 @@ export default function Settings() {
     id: "",
   });
 
-  // Fetch data
+  // Helper function to extract leading number from string
+  const extractLeadingNumber = (str: string): number => {
+    const match = str.match(/^(\d+)/);
+    return match ? parseInt(match[1]) : Infinity;
+  };
+
+  // Fetch data with custom sorting
   const { data: expenseCategories = [] } = useQuery({
     queryKey: ["expense-categories"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("expense_categories")
-        .select("*")
-        .order("name");
+        .select("*");
       if (error) throw error;
-      return data as Category[];
+      return (data as Category[]).sort((a, b) => extractLeadingNumber(a.name) - extractLeadingNumber(b.name));
     },
   });
 
@@ -67,10 +72,9 @@ export default function Settings() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("income_categories")
-        .select("*")
-        .order("name");
+        .select("*");
       if (error) throw error;
-      return data as Category[];
+      return (data as Category[]).sort((a, b) => extractLeadingNumber(a.name) - extractLeadingNumber(b.name));
     },
   });
 
@@ -79,10 +83,9 @@ export default function Settings() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("expense_items")
-        .select("*")
-        .order("name");
+        .select("*");
       if (error) throw error;
-      return data as Item[];
+      return (data as Item[]).sort((a, b) => extractLeadingNumber(a.name) - extractLeadingNumber(b.name));
     },
   });
 
@@ -91,10 +94,9 @@ export default function Settings() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("income_items")
-        .select("*")
-        .order("name");
+        .select("*");
       if (error) throw error;
-      return data as Item[];
+      return (data as Item[]).sort((a, b) => extractLeadingNumber(a.name) - extractLeadingNumber(b.name));
     },
   });
 
