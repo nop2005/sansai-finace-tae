@@ -5,7 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Settings as SettingsIcon, Plus, Trash2, Edit } from "lucide-react";
+import { Settings as SettingsIcon, Plus, Trash2, Edit, ChevronDown, ChevronRight } from "lucide-react";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -436,11 +437,14 @@ function ItemList({
   categories: Category[];
   onDelete: (id: string) => void;
 }) {
-  const getCategoryName = (categoryId: string | null) => {
-    if (!categoryId) return "ไม่ระบุหมวดหมู่";
-    const category = categories.find((c) => c.id === categoryId);
-    return category?.name || "ไม่ระบุหมวดหมู่";
-  };
+  // Group items by category
+  const groupedItems = categories.map((category) => ({
+    category,
+    items: items.filter((item) => item.category_id === category.id),
+  }));
+
+  // Items without category
+  const uncategorizedItems = items.filter((item) => !item.category_id);
 
   return (
     <Card>
@@ -448,29 +452,87 @@ function ItemList({
         <CardTitle>รายการทั้งหมด</CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="space-y-2">
-          {items.length === 0 ? (
-            <p className="text-muted-foreground text-center py-4">ยังไม่มีข้อมูล</p>
-          ) : (
-            items.map((item) => (
-              <div
-                key={item.id}
-                className="flex items-center justify-between p-4 border rounded-lg hover:bg-accent/50 transition-colors"
-              >
-                <div>
-                  <p className="font-medium">{item.name}</p>
-                  <p className="text-sm text-muted-foreground">หมวดหมู่: {getCategoryName(item.category_id)}</p>
-                  {item.description && (
-                    <p className="text-sm text-muted-foreground">{item.description}</p>
-                  )}
-                </div>
-                <Button variant="ghost" size="icon" onClick={() => onDelete(item.id)}>
-                  <Trash2 className="h-4 w-4 text-destructive" />
-                </Button>
-              </div>
-            ))
-          )}
-        </div>
+        {items.length === 0 ? (
+          <p className="text-muted-foreground text-center py-4">ยังไม่มีข้อมูล</p>
+        ) : (
+          <Accordion type="multiple" className="space-y-2">
+            {groupedItems.map(({ category, items: categoryItems }) => {
+              if (categoryItems.length === 0) return null;
+              
+              return (
+                <AccordionItem key={category.id} value={category.id} className="border rounded-lg px-4">
+                  <AccordionTrigger className="hover:no-underline py-3">
+                    <div className="flex items-center gap-2">
+                      <span className="font-semibold text-primary">{category.name}</span>
+                      <span className="text-xs text-muted-foreground">({categoryItems.length} รายการ)</span>
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent>
+                    <div className="space-y-1 pt-2 pb-2">
+                      {categoryItems.map((item) => (
+                        <div
+                          key={item.id}
+                          className="flex items-center justify-between p-3 pl-6 rounded-md hover:bg-accent/50 transition-colors group"
+                        >
+                          <div className="flex-1">
+                            <p className="font-medium">{item.name}</p>
+                            {item.description && (
+                              <p className="text-sm text-muted-foreground">{item.description}</p>
+                            )}
+                          </div>
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            onClick={() => onDelete(item.id)}
+                            className="opacity-0 group-hover:opacity-100 transition-opacity"
+                          >
+                            <Trash2 className="h-4 w-4 text-destructive" />
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+              );
+            })}
+
+            {uncategorizedItems.length > 0 && (
+              <AccordionItem value="uncategorized" className="border rounded-lg px-4">
+                <AccordionTrigger className="hover:no-underline py-3">
+                  <div className="flex items-center gap-2">
+                    <span className="font-semibold text-muted-foreground">ไม่ระบุหมวดหมู่</span>
+                    <span className="text-xs text-muted-foreground">({uncategorizedItems.length} รายการ)</span>
+                  </div>
+                </AccordionTrigger>
+                <AccordionContent>
+                  <div className="space-y-1 pt-2 pb-2">
+                    {uncategorizedItems.map((item) => (
+                      <div
+                        key={item.id}
+                        className="flex items-center justify-between p-3 pl-6 rounded-md hover:bg-accent/50 transition-colors group"
+                      >
+                        <div className="flex-1">
+                          <p className="font-medium">{item.name}</p>
+                          {item.description && (
+                            <p className="text-sm text-muted-foreground">{item.description}</p>
+                          )}
+                        </div>
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          onClick={() => onDelete(item.id)}
+                          className="opacity-0 group-hover:opacity-100 transition-opacity"
+                        >
+                          <Trash2 className="h-4 w-4 text-destructive" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+            )}
+          </Accordion>
+        )}
       </CardContent>
     </Card>
   );
