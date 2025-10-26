@@ -2,11 +2,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Search, TrendingUp, TrendingDown, Filter, CalendarIcon, FileText, CalendarDays, FolderTree, ChevronDown, ChevronRight, Edit, Eye, AlertCircle } from "lucide-react";
+import { Search, TrendingUp, TrendingDown, Filter, CalendarIcon, FileText, CalendarDays, FolderTree, ChevronDown, ChevronRight, Edit, Eye, AlertCircle, Trash2 } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useState, useEffect } from "react";
@@ -33,6 +34,7 @@ export default function Transactions() {
   const [loading, setLoading] = useState(true);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedTransaction, setSelectedTransaction] = useState<any>(null);
   const [editForm, setEditForm] = useState({
     category_id: "",
@@ -178,6 +180,58 @@ export default function Transactions() {
 
     toast.success("แก้ไขรายการสำเร็จ");
     setEditDialogOpen(false);
+    fetchData();
+  };
+
+  const handleDelete = (transaction: any) => {
+    setSelectedTransaction(transaction);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!selectedTransaction) return;
+
+    // First, delete all attachments associated with this transaction
+    const transactionAttachments = attachments.filter(a => a.transaction_id === selectedTransaction.id);
+    
+    // Delete files from storage
+    for (const attachment of transactionAttachments) {
+      const { error: storageError } = await supabase.storage
+        .from("transaction-attachments")
+        .remove([attachment.file_path]);
+      
+      if (storageError) {
+        console.error("Error deleting file from storage:", storageError);
+      }
+    }
+
+    // Delete attachment records from database
+    const { error: attachmentError } = await supabase
+      .from("transaction_attachments")
+      .delete()
+      .eq("transaction_id", selectedTransaction.id);
+
+    if (attachmentError) {
+      toast.error("เกิดข้อผิดพลาดในการลบไฟล์แนบ");
+      console.error(attachmentError);
+      return;
+    }
+
+    // Delete the transaction
+    const { error } = await supabase
+      .from("transactions")
+      .delete()
+      .eq("id", selectedTransaction.id);
+
+    if (error) {
+      toast.error("เกิดข้อผิดพลาดในการลบรายการ");
+      console.error(error);
+      return;
+    }
+
+    toast.success("ลบรายการสำเร็จ");
+    setDeleteDialogOpen(false);
+    setSelectedTransaction(null);
     fetchData();
   };
 
@@ -609,22 +663,29 @@ export default function Transactions() {
                                    {Number(transaction.amount).toLocaleString()}
                                  </p>
                                </div>
-                               <div className="flex gap-1">
-                                 <Button
-                                   size="sm"
-                                   variant="ghost"
-                                   onClick={() => handleViewDetails(transaction)}
-                                 >
-                                   <Eye className="h-4 w-4" />
-                                 </Button>
-                                 <Button
-                                   size="sm"
-                                   variant="ghost"
-                                   onClick={() => handleEdit(transaction)}
-                                 >
-                                   <Edit className="h-4 w-4" />
-                                 </Button>
-                               </div>
+                                <div className="flex gap-1">
+                                  <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    onClick={() => handleViewDetails(transaction)}
+                                  >
+                                    <Eye className="h-4 w-4" />
+                                  </Button>
+                                  <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    onClick={() => handleEdit(transaction)}
+                                  >
+                                    <Edit className="h-4 w-4" />
+                                  </Button>
+                                  <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    onClick={() => handleDelete(transaction)}
+                                  >
+                                    <Trash2 className="h-4 w-4 text-destructive" />
+                                  </Button>
+                                </div>
                              </div>
                            </div>
                         );
@@ -712,22 +773,29 @@ export default function Transactions() {
                              {Number(transaction.amount).toLocaleString()}
                            </p>
                          </div>
-                         <div className="flex gap-1">
-                           <Button
-                             size="sm"
-                             variant="ghost"
-                             onClick={() => handleViewDetails(transaction)}
-                           >
-                             <Eye className="h-4 w-4" />
-                           </Button>
-                           <Button
-                             size="sm"
-                             variant="ghost"
-                             onClick={() => handleEdit(transaction)}
-                           >
-                             <Edit className="h-4 w-4" />
-                           </Button>
-                         </div>
+                          <div className="flex gap-1">
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => handleViewDetails(transaction)}
+                            >
+                              <Eye className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => handleEdit(transaction)}
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => handleDelete(transaction)}
+                            >
+                              <Trash2 className="h-4 w-4 text-destructive" />
+                            </Button>
+                          </div>
                        </div>
                      </div>
                   );
@@ -976,6 +1044,36 @@ export default function Transactions() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>ยืนยันการลบรายการ</AlertDialogTitle>
+            <AlertDialogDescription>
+              คุณแน่ใจหรือไม่ว่าต้องการลบรายการนี้? การดำเนินการนี้ไม่สามารถย้อนกลับได้ และไฟล์แนบทั้งหมดจะถูกลบด้วย
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          {selectedTransaction && (
+            <div className="my-4 p-4 bg-muted rounded-lg">
+              <p className="text-sm font-medium mb-2">
+                {getItemName(selectedTransaction.item_id, selectedTransaction.type) || selectedTransaction.description || "ไม่ระบุ"}
+              </p>
+              <p className={`text-lg font-bold ${
+                selectedTransaction.type === "income" ? "text-income" : "text-expense"
+              }`}>
+                {selectedTransaction.type === "income" ? "+" : "-"}฿{Number(selectedTransaction.amount).toLocaleString()}
+              </p>
+            </div>
+          )}
+          <AlertDialogFooter>
+            <AlertDialogCancel>ยกเลิก</AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirmDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              ลบรายการ
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
