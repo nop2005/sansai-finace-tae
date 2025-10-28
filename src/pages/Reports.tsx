@@ -324,6 +324,7 @@ export default function Reports() {
                     border: "1px solid hsl(var(--border))",
                     borderRadius: "8px",
                   }}
+                  formatter={(value: number) => value.toLocaleString('th-TH', { maximumFractionDigits: 0 })}
                 />
                 <Legend />
                 <Line
@@ -372,6 +373,7 @@ export default function Reports() {
                     border: "1px solid hsl(var(--border))",
                     borderRadius: "8px",
                   }}
+                  formatter={(value: number) => value.toLocaleString('th-TH', { maximumFractionDigits: 0 })}
                 />
                 <Legend />
                 <Bar dataKey="income" name="รายรับ" fill="hsl(var(--income))" radius={[4, 4, 0, 0]} />

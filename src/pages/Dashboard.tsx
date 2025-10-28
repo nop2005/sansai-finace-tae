@@ -268,7 +268,7 @@ export default function Dashboard() {
                 return `วันที่ ${payload[0].payload.fullDate}`;
               }
               return `วันที่ ${value}`;
-            }} />
+            }} formatter={(value: number) => value.toLocaleString('th-TH', { maximumFractionDigits: 0 })} />
               <Legend />
               <Bar dataKey="income" name="รายรับ" fill="hsl(var(--income))" radius={[8, 8, 0, 0]} />
               <Bar dataKey="expense" name="รายจ่าย" fill="hsl(var(--expense))" radius={[8, 8, 0, 0]} />
@@ -294,7 +294,7 @@ export default function Dashboard() {
                 backgroundColor: "hsl(var(--card))",
                 border: "1px solid hsl(var(--border))",
                 borderRadius: "8px"
-              }} />
+              }} formatter={(value: number) => value.toLocaleString('th-TH', { maximumFractionDigits: 0 })} />
                 <Legend />
                 <Bar dataKey="income" name="รายรับ" fill="hsl(var(--income))" radius={[8, 8, 0, 0]} />
                 <Bar dataKey="expense" name="รายจ่าย" fill="hsl(var(--expense))" radius={[8, 8, 0, 0]} />
@@ -318,7 +318,7 @@ export default function Dashboard() {
                 backgroundColor: "hsl(var(--card))",
                 border: "1px solid hsl(var(--border))",
                 borderRadius: "8px"
-              }} />
+              }} formatter={(value: number) => value.toLocaleString('th-TH', { maximumFractionDigits: 0 })} />
                 <Legend />
                 <Line type="monotone" dataKey="income" name="รายรับสะสม" stroke="hsl(var(--income))" strokeWidth={3} dot={{
                 fill: "hsl(var(--income))",
@@ -354,7 +354,7 @@ export default function Dashboard() {
                 backgroundColor: "hsl(var(--card))",
                 border: "1px solid hsl(var(--border))",
                 borderRadius: "8px"
-              }} />
+              }} formatter={(value: number) => value.toLocaleString('th-TH', { maximumFractionDigits: 0 })} />
                 </PieChart>
               </ResponsiveContainer> : <div className="flex items-center justify-center h-[300px] text-muted-foreground">
                 ไม่มีข้อมูลรายรับ
@@ -380,7 +380,7 @@ export default function Dashboard() {
                 backgroundColor: "hsl(var(--card))",
                 border: "1px solid hsl(var(--border))",
                 borderRadius: "8px"
-              }} />
+              }} formatter={(value: number) => value.toLocaleString('th-TH', { maximumFractionDigits: 0 })} />
                 </PieChart>
               </ResponsiveContainer> : <div className="flex items-center justify-center h-[300px] text-muted-foreground">
                 ไม่มีข้อมูลรายจ่าย
