@@ -139,7 +139,7 @@ export default function Expense() {
     },
     onSuccess: () => {
       toast.success("บันทึกรายจ่ายสำเร็จ", {
-        description: `จำนวน ฿${parseFloat(formData.amount).toLocaleString()}`,
+        description: `จำนวน ${parseFloat(formData.amount).toLocaleString()}`,
       });
       // Reset form
       setFormData({

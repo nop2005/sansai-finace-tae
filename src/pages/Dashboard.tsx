@@ -68,19 +68,19 @@ export default function Dashboard() {
   const totalTransactions = transactions.length;
   const summaryData = [{
     title: "รายรับทั้งหมด",
-    value: `฿${totalIncome.toLocaleString()}`,
+    value: `${totalIncome.toLocaleString()}`,
     change: "+0%",
     icon: TrendingUp,
     color: "text-income"
   }, {
     title: "รายจ่ายทั้งหมด",
-    value: `฿${totalExpense.toLocaleString()}`,
+    value: `${totalExpense.toLocaleString()}`,
     change: "+0%",
     icon: TrendingDown,
     color: "text-expense"
   }, {
     title: "คงเหลือสุทธิ",
-    value: `฿${netBalance.toLocaleString()}`,
+    value: `${netBalance.toLocaleString()}`,
     change: "+0%",
     icon: Wallet,
     color: "text-primary"

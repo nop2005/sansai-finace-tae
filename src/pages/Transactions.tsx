@@ -489,7 +489,7 @@ export default function Transactions() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-income">
-              ฿{totalIncome.toLocaleString()}
+              {totalIncome.toLocaleString()}
             </div>
           </CardContent>
         </Card>
@@ -500,7 +500,7 @@ export default function Transactions() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-expense">
-              ฿{totalExpense.toLocaleString()}
+              {totalExpense.toLocaleString()}
             </div>
           </CardContent>
         </Card>
@@ -511,7 +511,7 @@ export default function Transactions() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-primary">
-              ฿{(totalIncome - totalExpense).toLocaleString()}
+              {(totalIncome - totalExpense).toLocaleString()}
             </div>
           </CardContent>
         </Card>
@@ -547,7 +547,7 @@ export default function Transactions() {
               <p className={`text-2xl font-bold ${
                 filteredTotal >= 0 ? "text-income" : "text-expense"
               }`}>
-                {filteredTotal >= 0 ? "+" : ""}฿{Math.abs(filteredTotal).toLocaleString()}
+                {filteredTotal >= 0 ? "+" : ""}{Math.abs(filteredTotal).toLocaleString()}
               </p>
             </div>
           </div>
@@ -583,7 +583,7 @@ export default function Transactions() {
                       <p className={`text-lg font-bold ${
                         group.type === "income" ? "text-income" : "text-expense"
                       }`}>
-                        {group.type === "income" ? "+" : "-"}฿{group.total.toLocaleString()}
+                        {group.type === "income" ? "+" : "-"}{group.total.toLocaleString()}
                       </p>
                     </div>
 
@@ -659,8 +659,8 @@ export default function Transactions() {
                                        : "text-expense"
                                    }`}
                                  >
-                                   {transaction.type === "income" ? "+" : "-"}฿
-                                   {Number(transaction.amount).toLocaleString()}
+                                   {transaction.type === "income" ? "+" : "-"}
+                                    {Number(transaction.amount).toLocaleString()}
                                  </p>
                                </div>
                                 <div className="flex gap-1">
@@ -769,8 +769,8 @@ export default function Transactions() {
                                  : "text-expense"
                              }`}
                            >
-                             {transaction.type === "income" ? "+" : "-"}฿
-                             {Number(transaction.amount).toLocaleString()}
+                             {transaction.type === "income" ? "+" : "-"}
+                              {Number(transaction.amount).toLocaleString()}
                            </p>
                          </div>
                           <div className="flex gap-1">

@@ -269,7 +269,7 @@ export default function Reports() {
             <CardTitle className="text-sm font-medium text-muted-foreground">รายรับสะสม</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-income">฿{totalIncome.toLocaleString()}</div>
+            <div className="text-2xl font-bold text-income">{totalIncome.toLocaleString()}</div>
             <p className="text-xs text-muted-foreground mt-1">ช่วงเวลาที่เลือก</p>
           </CardContent>
         </Card>
@@ -279,7 +279,7 @@ export default function Reports() {
             <CardTitle className="text-sm font-medium text-muted-foreground">รายจ่ายสะสม</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-expense">฿{totalExpense.toLocaleString()}</div>
+            <div className="text-2xl font-bold text-expense">{totalExpense.toLocaleString()}</div>
             <p className="text-xs text-muted-foreground mt-1">ช่วงเวลาที่เลือก</p>
           </CardContent>
         </Card>
@@ -289,7 +289,7 @@ export default function Reports() {
             <CardTitle className="text-sm font-medium text-muted-foreground">กำไรสุทธิ</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-primary">฿{netProfit.toLocaleString()}</div>
+            <div className="text-2xl font-bold text-primary">{netProfit.toLocaleString()}</div>
             <p className="text-xs text-muted-foreground mt-1">ช่วงเวลาที่เลือก</p>
           </CardContent>
         </Card>
@@ -407,13 +407,13 @@ export default function Reports() {
                   <tr key={row.month} className="border-b border-border hover:bg-accent/50">
                     <td className="py-3 px-4">{row.month}</td>
                     <td className="text-right py-3 px-4 text-income font-medium">
-                      ฿{row.income.toLocaleString()}
+                      {row.income.toLocaleString()}
                     </td>
                     <td className="text-right py-3 px-4 text-expense font-medium">
-                      ฿{row.expense.toLocaleString()}
+                      {row.expense.toLocaleString()}
                     </td>
                     <td className="text-right py-3 px-4 font-bold">
-                      ฿{row.net.toLocaleString()}
+                      {row.net.toLocaleString()}
                     </td>
                     <td className="text-right py-3 px-4">
                       {row.income > 0 ? ((row.net / row.income) * 100).toFixed(1) : "0.0"}%
@@ -434,13 +434,13 @@ export default function Reports() {
                 <tr className="border-t-2 border-border bg-accent/30 font-bold">
                   <td className="py-3 px-4">รวมทั้งหมด</td>
                   <td className="text-right py-3 px-4 text-income">
-                    ฿{totalsRow.income.toLocaleString()}
+                    {totalsRow.income.toLocaleString()}
                   </td>
                   <td className="text-right py-3 px-4 text-expense">
-                    ฿{totalsRow.expense.toLocaleString()}
+                    {totalsRow.expense.toLocaleString()}
                   </td>
                   <td className="text-right py-3 px-4 text-primary">
-                    ฿{totalsRow.net.toLocaleString()}
+                    {totalsRow.net.toLocaleString()}
                   </td>
                   <td className="text-right py-3 px-4">
                     {totalsRow.income > 0 ? ((totalsRow.net / totalsRow.income) * 100).toFixed(1) : "0.0"}%

@@ -488,7 +488,7 @@ export default function MonthlyDetail() {
             <CardTitle className="text-sm font-medium text-muted-foreground">รายรับ</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-income">฿{totalIncome.toLocaleString()}</div>
+            <div className="text-2xl font-bold text-income">{totalIncome.toLocaleString()}</div>
           </CardContent>
         </Card>
 
@@ -497,7 +497,7 @@ export default function MonthlyDetail() {
             <CardTitle className="text-sm font-medium text-muted-foreground">รายจ่าย</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-expense">฿{totalExpense.toLocaleString()}</div>
+            <div className="text-2xl font-bold text-expense">{totalExpense.toLocaleString()}</div>
           </CardContent>
         </Card>
 
@@ -507,7 +507,7 @@ export default function MonthlyDetail() {
           </CardHeader>
           <CardContent>
             <div className={`text-2xl font-bold ${balance >= 0 ? 'text-primary' : 'text-destructive'}`}>
-              ฿{balance.toLocaleString()}
+              {balance.toLocaleString()}
             </div>
           </CardContent>
         </Card>
@@ -626,16 +626,16 @@ export default function MonthlyDetail() {
           <div className="space-y-2">
             <div className="flex justify-between py-2">
               <span className="font-medium">รายรับรวม:</span>
-              <span className="text-income font-bold">฿{totalIncome.toLocaleString()}</span>
+              <span className="text-income font-bold">{totalIncome.toLocaleString()}</span>
             </div>
             <div className="flex justify-between py-2">
               <span className="font-medium">รายจ่ายรวม:</span>
-              <span className="text-expense font-bold">฿{totalExpense.toLocaleString()}</span>
+              <span className="text-expense font-bold">{totalExpense.toLocaleString()}</span>
             </div>
             <div className="flex justify-between py-3 border-t-2 border-border">
               <span className="font-bold text-lg">เงินคงเหลือ:</span>
               <span className={`font-bold text-lg ${balance >= 0 ? 'text-primary' : 'text-destructive'}`}>
-                ฿{balance.toLocaleString()}
+                {balance.toLocaleString()}
               </span>
             </div>
           </div>
