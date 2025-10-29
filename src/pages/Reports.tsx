@@ -218,10 +218,10 @@ export default function Reports() {
     const day = dayIndex + 1;
     
     const monthAverages = prev3MonthsData.map(({ monthStart, monthEnd }) => {
-      const dayDate = new Date(monthStart.getFullYear(), monthStart.getMonth(), day);
-      
-      // Only calculate if the day exists in that month
-      if (dayDate > monthEnd) return 0;
+      // Use the last day of the month if the current day doesn't exist in that month
+      const daysInPrevMonth = getDaysInMonth(monthStart);
+      const actualDay = Math.min(day, daysInPrevMonth);
+      const dayDate = new Date(monthStart.getFullYear(), monthStart.getMonth(), actualDay);
       
       // Calculate cumulative expense up to this day in that previous month
       const cumulativeExpense = transactions
