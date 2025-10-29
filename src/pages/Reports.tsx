@@ -476,7 +476,7 @@ export default function Reports() {
             </div>
             <div>
               <p className="text-sm text-muted-foreground">รายจ่ายเฉลี่ยย้อนหลัง 3 เดือน</p>
-              <p className="text-2xl font-bold text-income">{totalAverage3Months.toLocaleString()}</p>
+              <p className="text-2xl font-bold text-income">{totalAverage3Months.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
             </div>
           </div>
         </CardHeader>
