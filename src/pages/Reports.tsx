@@ -9,7 +9,7 @@ import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, L
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { format, startOfMonth, endOfMonth, startOfYear, endOfYear, startOfQuarter, endOfQuarter, subYears } from "date-fns";
+import { format, startOfMonth, endOfMonth, startOfYear, endOfYear, startOfQuarter, endOfQuarter, subMonths, eachDayOfInterval, getDaysInMonth } from "date-fns";
 import { th } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 
@@ -163,6 +163,79 @@ export default function Reports() {
       expense: amount,
     })),
   ].slice(0, 8);
+
+  // Calculate cumulative daily expenses for current month
+  const daysInCurrentMonth = getDaysInMonth(startDate);
+  const currentMonthStart = startOfMonth(startDate);
+  const currentMonthEnd = endOfMonth(startDate);
+  
+  const dailyCumulativeExpense = Array.from({ length: daysInCurrentMonth }, (_, dayIndex) => {
+    const day = dayIndex + 1;
+    const dayDate = new Date(currentMonthStart.getFullYear(), currentMonthStart.getMonth(), day);
+    
+    // Calculate cumulative expense up to this day in current month
+    const cumulativeExpense = transactions
+      .filter((t) => {
+        const tDate = new Date(t.date);
+        return t.type === "expense" && 
+               tDate >= currentMonthStart && 
+               tDate <= dayDate;
+      })
+      .reduce((sum, t) => sum + Number(t.amount), 0);
+    
+    return {
+      day,
+      currentMonth: cumulativeExpense,
+      average3Months: 0 // Will calculate next
+    };
+  });
+
+  // Calculate average cumulative expense from previous 3 months
+  const prev3MonthsData = Array.from({ length: 3 }, (_, monthOffset) => {
+    const monthDate = subMonths(currentMonthStart, monthOffset + 1);
+    const monthStart = startOfMonth(monthDate);
+    const monthEnd = endOfMonth(monthDate);
+    
+    return { monthStart, monthEnd };
+  });
+
+  // For each day, calculate average from previous 3 months
+  dailyCumulativeExpense.forEach((dayData, dayIndex) => {
+    const day = dayIndex + 1;
+    
+    const monthAverages = prev3MonthsData.map(({ monthStart, monthEnd }) => {
+      const dayDate = new Date(monthStart.getFullYear(), monthStart.getMonth(), day);
+      
+      // Only calculate if the day exists in that month
+      if (dayDate > monthEnd) return 0;
+      
+      return transactions
+        .filter((t) => {
+          const tDate = new Date(t.date);
+          return t.type === "expense" && 
+                 tDate >= monthStart && 
+                 tDate <= dayDate;
+        })
+        .reduce((sum, t) => sum + Number(t.amount), 0);
+    });
+    
+    // Calculate average (only from months that have this day)
+    const validAverages = monthAverages.filter(avg => avg > 0 || monthAverages.length > 0);
+    dayData.average3Months = validAverages.length > 0 
+      ? monthAverages.reduce((sum, val) => sum + val, 0) / 3
+      : 0;
+  });
+
+  // Calculate totals for current month
+  const totalExpenseCurrentMonth = dailyCumulativeExpense[dailyCumulativeExpense.length - 1]?.currentMonth || 0;
+  const totalIncomeCurrentMonth = transactions
+    .filter((t) => {
+      const tDate = new Date(t.date);
+      return t.type === "income" && 
+             tDate >= currentMonthStart && 
+             tDate <= currentMonthEnd;
+    })
+    .reduce((sum, t) => sum + Number(t.amount), 0);
 
   return (
     <div className="space-y-6">
@@ -383,6 +456,63 @@ export default function Reports() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Cumulative Daily Expense Chart */}
+      <Card>
+        <CardHeader>
+          <CardTitle>รายงานประจำเดือนนี้</CardTitle>
+          <div className="flex flex-col sm:flex-row gap-4 mt-4">
+            <div>
+              <p className="text-sm text-muted-foreground">การใช้จ่ายทั้งหมด</p>
+              <p className="text-2xl font-bold text-expense">{totalExpenseCurrentMonth.toLocaleString()}</p>
+            </div>
+            <div>
+              <p className="text-sm text-muted-foreground">รายได้รวม</p>
+              <p className="text-2xl font-bold text-income">{totalIncomeCurrentMonth.toLocaleString()}</p>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <ResponsiveContainer width="100%" height={350}>
+            <LineChart data={dailyCumulativeExpense}>
+              <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
+              <XAxis 
+                dataKey="day" 
+                className="text-xs"
+                label={{ value: `${format(currentMonthStart, 'MM/yyyy', { locale: th })}`, position: 'insideBottom', offset: -5 }}
+              />
+              <YAxis className="text-xs" />
+              <Tooltip
+                contentStyle={{
+                  backgroundColor: "hsl(var(--card))",
+                  border: "1px solid hsl(var(--border))",
+                  borderRadius: "8px",
+                }}
+                formatter={(value: number) => value.toLocaleString('th-TH', { maximumFractionDigits: 0 })}
+                labelFormatter={(day) => `${day}/${format(currentMonthStart, 'MM/yyyy', { locale: th })}`}
+              />
+              <Legend />
+              <Line
+                type="monotone"
+                dataKey="currentMonth"
+                name="เดือนนี้"
+                stroke="hsl(var(--expense))"
+                strokeWidth={3}
+                dot={{ fill: "hsl(var(--expense))", r: 4 }}
+              />
+              <Line
+                type="monotone"
+                dataKey="average3Months"
+                name="ค่าเฉลี่ย 3 เดือนก่อนหน้า"
+                stroke="hsl(var(--muted-foreground))"
+                strokeWidth={2}
+                strokeDasharray="5 5"
+                dot={{ fill: "hsl(var(--muted-foreground))", r: 3 }}
+              />
+            </LineChart>
+          </ResponsiveContainer>
+        </CardContent>
+      </Card>
 
       {/* Detailed Table */}
       <Card>
