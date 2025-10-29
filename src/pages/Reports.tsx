@@ -243,14 +243,7 @@ export default function Reports() {
 
   // Calculate totals for current month
   const totalExpenseCurrentMonth = dailyCumulativeExpense[dailyCumulativeExpense.length - 1]?.currentMonth || 0;
-  const totalIncomeCurrentMonth = transactions
-    .filter((t) => {
-      const tDate = new Date(t.date);
-      return t.type === "income" && 
-             tDate >= currentMonthStart && 
-             tDate <= currentMonthEnd;
-    })
-    .reduce((sum, t) => sum + Number(t.amount), 0);
+  const totalAverage3Months = dailyCumulativeExpense[dailyCumulativeExpense.length - 1]?.average3Months || 0;
 
   return (
     <div className="space-y-6">
@@ -482,8 +475,8 @@ export default function Reports() {
               <p className="text-2xl font-bold text-expense">{totalExpenseCurrentMonth.toLocaleString()}</p>
             </div>
             <div>
-              <p className="text-sm text-muted-foreground">รายได้รวม</p>
-              <p className="text-2xl font-bold text-income">{totalIncomeCurrentMonth.toLocaleString()}</p>
+              <p className="text-sm text-muted-foreground">รายจ่ายเฉลี่ยย้อนหลัง 3 เดือน</p>
+              <p className="text-2xl font-bold text-income">{totalAverage3Months.toLocaleString()}</p>
             </div>
           </div>
         </CardHeader>
