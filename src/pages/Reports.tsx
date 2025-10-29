@@ -32,12 +32,26 @@ export default function Reports() {
   const fetchData = async () => {
     setLoading(true);
 
-    // Fetch transactions
+    // Fetch transactions for current period
     const { data: transactionsData } = await supabase
       .from("transactions")
       .select("*")
       .gte("date", format(startDate, "yyyy-MM-dd"))
       .lte("date", format(endDate, "yyyy-MM-dd"));
+
+    // Fetch transactions for previous 3 months (for comparison chart)
+    const prev3MonthsStart = subMonths(startOfMonth(startDate), 3);
+    const { data: prev3MonthsTransactions } = await supabase
+      .from("transactions")
+      .select("*")
+      .gte("date", format(prev3MonthsStart, "yyyy-MM-dd"))
+      .lt("date", format(startDate, "yyyy-MM-dd"));
+
+    // Combine all transactions for calculation
+    const allTransactions = [
+      ...(transactionsData || []),
+      ...(prev3MonthsTransactions || [])
+    ];
 
     // Fetch categories
     const { data: incomeCategoriesData } = await supabase
@@ -48,7 +62,7 @@ export default function Reports() {
       .from("expense_categories")
       .select("*");
 
-    if (transactionsData) setTransactions(transactionsData);
+    if (allTransactions) setTransactions(allTransactions);
     if (incomeCategoriesData) setIncomeCategories(incomeCategoriesData);
     if (expenseCategoriesData) setExpenseCategories(expenseCategoriesData);
 
@@ -209,7 +223,8 @@ export default function Reports() {
       // Only calculate if the day exists in that month
       if (dayDate > monthEnd) return 0;
       
-      return transactions
+      // Calculate cumulative expense up to this day in that previous month
+      const cumulativeExpense = transactions
         .filter((t) => {
           const tDate = new Date(t.date);
           return t.type === "expense" && 
@@ -217,13 +232,13 @@ export default function Reports() {
                  tDate <= dayDate;
         })
         .reduce((sum, t) => sum + Number(t.amount), 0);
+      
+      return cumulativeExpense;
     });
     
-    // Calculate average (only from months that have this day)
-    const validAverages = monthAverages.filter(avg => avg > 0 || monthAverages.length > 0);
-    dayData.average3Months = validAverages.length > 0 
-      ? monthAverages.reduce((sum, val) => sum + val, 0) / 3
-      : 0;
+    // Calculate average from all 3 months
+    const total = monthAverages.reduce((sum, val) => sum + val, 0);
+    dayData.average3Months = total / 3;
   });
 
   // Calculate totals for current month
