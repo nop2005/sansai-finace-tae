@@ -397,7 +397,7 @@ export default function Reports() {
       {/* Cumulative Daily Expense Chart */}
       <Card>
         <CardHeader>
-          <CardTitle>รายงานเปรียบเทียบรายจ่ายประจำเดือนนี้</CardTitle>
+          <CardTitle>เปรียบเทียบรายจ่ายประจำเดือนนี้</CardTitle>
           <div className="flex flex-col sm:flex-row gap-4 mt-4">
             <div>
               <p className="text-sm text-muted-foreground">การใช้จ่ายทั้งหมด</p>
