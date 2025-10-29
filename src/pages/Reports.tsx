@@ -12,9 +12,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { format, startOfMonth, endOfMonth, startOfYear, endOfYear, startOfQuarter, endOfQuarter, subMonths, eachDayOfInterval, getDaysInMonth } from "date-fns";
 import { th } from "date-fns/locale";
 import { cn } from "@/lib/utils";
-
 type PeriodType = "custom" | "monthly" | "quarterly" | "yearly";
-
 export default function Reports() {
   const navigate = useNavigate();
   const [periodType, setPeriodType] = useState<PeriodType>("monthly");
@@ -24,55 +22,41 @@ export default function Reports() {
   const [incomeCategories, setIncomeCategories] = useState<any[]>([]);
   const [expenseCategories, setExpenseCategories] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-
   useEffect(() => {
     fetchData();
   }, [startDate, endDate]);
-
   const fetchData = async () => {
     setLoading(true);
 
     // Fetch transactions for current period
-    const { data: transactionsData } = await supabase
-      .from("transactions")
-      .select("*")
-      .gte("date", format(startDate, "yyyy-MM-dd"))
-      .lte("date", format(endDate, "yyyy-MM-dd"));
+    const {
+      data: transactionsData
+    } = await supabase.from("transactions").select("*").gte("date", format(startDate, "yyyy-MM-dd")).lte("date", format(endDate, "yyyy-MM-dd"));
 
     // Fetch transactions for previous 3 months (for comparison chart)
     const prev3MonthsStart = subMonths(startOfMonth(startDate), 3);
-    const { data: prev3MonthsTransactions } = await supabase
-      .from("transactions")
-      .select("*")
-      .gte("date", format(prev3MonthsStart, "yyyy-MM-dd"))
-      .lt("date", format(startDate, "yyyy-MM-dd"));
+    const {
+      data: prev3MonthsTransactions
+    } = await supabase.from("transactions").select("*").gte("date", format(prev3MonthsStart, "yyyy-MM-dd")).lt("date", format(startDate, "yyyy-MM-dd"));
 
     // Combine all transactions for calculation
-    const allTransactions = [
-      ...(transactionsData || []),
-      ...(prev3MonthsTransactions || [])
-    ];
+    const allTransactions = [...(transactionsData || []), ...(prev3MonthsTransactions || [])];
 
     // Fetch categories
-    const { data: incomeCategoriesData } = await supabase
-      .from("income_categories")
-      .select("*");
-
-    const { data: expenseCategoriesData } = await supabase
-      .from("expense_categories")
-      .select("*");
-
+    const {
+      data: incomeCategoriesData
+    } = await supabase.from("income_categories").select("*");
+    const {
+      data: expenseCategoriesData
+    } = await supabase.from("expense_categories").select("*");
     if (allTransactions) setTransactions(allTransactions);
     if (incomeCategoriesData) setIncomeCategories(incomeCategoriesData);
     if (expenseCategoriesData) setExpenseCategories(expenseCategoriesData);
-
     setLoading(false);
   };
-
   const handlePeriodChange = (value: PeriodType) => {
     setPeriodType(value);
     const now = new Date();
-    
     switch (value) {
       case "monthly":
         setStartDate(startOfMonth(now));
@@ -91,112 +75,88 @@ export default function Reports() {
         break;
     }
   };
-
   const handleDownload = (format: string) => {
     toast.success(`กำลังดาวน์โหลดรายงานในรูปแบบ ${format.toUpperCase()}`);
   };
 
   // Calculate summary statistics
-  const totalIncome = transactions
-    .filter((t) => t.type === "income")
-    .reduce((sum, t) => sum + Number(t.amount), 0);
-
-  const totalExpense = transactions
-    .filter((t) => t.type === "expense")
-    .reduce((sum, t) => sum + Number(t.amount), 0);
-
+  const totalIncome = transactions.filter(t => t.type === "income").reduce((sum, t) => sum + Number(t.amount), 0);
+  const totalExpense = transactions.filter(t => t.type === "expense").reduce((sum, t) => sum + Number(t.amount), 0);
   const netProfit = totalIncome - totalExpense;
-  const profitMargin = totalIncome > 0 ? (netProfit / totalIncome) * 100 : 0;
+  const profitMargin = totalIncome > 0 ? netProfit / totalIncome * 100 : 0;
 
   // Generate monthly data for all 12 months of current year
   const monthNames = ["ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.", "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค."];
   const currentYear = new Date().getFullYear();
-
   const monthlyComparison = monthNames.map((monthName, index) => {
-    const monthTransactions = transactions.filter((t) => {
+    const monthTransactions = transactions.filter(t => {
       const transactionDate = new Date(t.date);
       return transactionDate.getFullYear() === currentYear && transactionDate.getMonth() === index;
     });
-
-    const income = monthTransactions
-      .filter((t) => t.type === "income")
-      .reduce((sum, t) => sum + Number(t.amount), 0);
-
-    const expense = monthTransactions
-      .filter((t) => t.type === "expense")
-      .reduce((sum, t) => sum + Number(t.amount), 0);
-
+    const income = monthTransactions.filter(t => t.type === "income").reduce((sum, t) => sum + Number(t.amount), 0);
+    const expense = monthTransactions.filter(t => t.type === "expense").reduce((sum, t) => sum + Number(t.amount), 0);
     const net = income - expense;
-
-    return { month: monthName, income, expense, net };
+    return {
+      month: monthName,
+      income,
+      expense,
+      net
+    };
   });
 
   // Calculate totals for the table
-  const totalsRow = monthlyComparison.reduce(
-    (acc, row) => ({
-      income: acc.income + row.income,
-      expense: acc.expense + row.expense,
-      net: acc.net + row.net,
-    }),
-    { income: 0, expense: 0, net: 0 }
-  );
+  const totalsRow = monthlyComparison.reduce((acc, row) => ({
+    income: acc.income + row.income,
+    expense: acc.expense + row.expense,
+    net: acc.net + row.net
+  }), {
+    income: 0,
+    expense: 0,
+    net: 0
+  });
 
   // Group by category for comparison
-  const incomeByCategory = transactions
-    .filter((t) => t.type === "income")
-    .reduce((acc, t) => {
-      const categoryId = t.category_id;
-      const category = incomeCategories.find((c) => c.id === categoryId);
-      const categoryName = category ? category.name : "ไม่ระบุหมวดหมู่";
-      
-      acc[categoryName] = (acc[categoryName] || 0) + Number(t.amount);
-      return acc;
-    }, {} as Record<string, number>);
-
-  const expenseByCategory = transactions
-    .filter((t) => t.type === "expense")
-    .reduce((acc, t) => {
-      const categoryId = t.category_id;
-      const category = expenseCategories.find((c) => c.id === categoryId);
-      const categoryName = category ? category.name : "ไม่ระบุหมวดหมู่";
-      
-      acc[categoryName] = (acc[categoryName] || 0) + Number(t.amount);
-      return acc;
-    }, {} as Record<string, number>);
+  const incomeByCategory = transactions.filter(t => t.type === "income").reduce((acc, t) => {
+    const categoryId = t.category_id;
+    const category = incomeCategories.find(c => c.id === categoryId);
+    const categoryName = category ? category.name : "ไม่ระบุหมวดหมู่";
+    acc[categoryName] = (acc[categoryName] || 0) + Number(t.amount);
+    return acc;
+  }, {} as Record<string, number>);
+  const expenseByCategory = transactions.filter(t => t.type === "expense").reduce((acc, t) => {
+    const categoryId = t.category_id;
+    const category = expenseCategories.find(c => c.id === categoryId);
+    const categoryName = category ? category.name : "ไม่ระบุหมวดหมู่";
+    acc[categoryName] = (acc[categoryName] || 0) + Number(t.amount);
+    return acc;
+  }, {} as Record<string, number>);
 
   // Combine for chart (showing top categories)
-  const categoryComparison = [
-    ...Object.entries(incomeByCategory).map(([category, amount]) => ({
-      category,
-      income: amount,
-      expense: 0,
-    })),
-    ...Object.entries(expenseByCategory).map(([category, amount]) => ({
-      category,
-      income: 0,
-      expense: amount,
-    })),
-  ].slice(0, 8);
+  const categoryComparison = [...Object.entries(incomeByCategory).map(([category, amount]) => ({
+    category,
+    income: amount,
+    expense: 0
+  })), ...Object.entries(expenseByCategory).map(([category, amount]) => ({
+    category,
+    income: 0,
+    expense: amount
+  }))].slice(0, 8);
 
   // Calculate cumulative daily expenses for current month
   const daysInCurrentMonth = getDaysInMonth(startDate);
   const currentMonthStart = startOfMonth(startDate);
   const currentMonthEnd = endOfMonth(startDate);
-  
-  const dailyCumulativeExpense = Array.from({ length: daysInCurrentMonth }, (_, dayIndex) => {
+  const dailyCumulativeExpense = Array.from({
+    length: daysInCurrentMonth
+  }, (_, dayIndex) => {
     const day = dayIndex + 1;
     const dayDate = new Date(currentMonthStart.getFullYear(), currentMonthStart.getMonth(), day);
-    
+
     // Calculate cumulative expense up to this day in current month
-    const cumulativeExpense = transactions
-      .filter((t) => {
-        const tDate = new Date(t.date);
-        return t.type === "expense" && 
-               tDate >= currentMonthStart && 
-               tDate <= dayDate;
-      })
-      .reduce((sum, t) => sum + Number(t.amount), 0);
-    
+    const cumulativeExpense = transactions.filter(t => {
+      const tDate = new Date(t.date);
+      return t.type === "expense" && tDate >= currentMonthStart && tDate <= dayDate;
+    }).reduce((sum, t) => sum + Number(t.amount), 0);
     return {
       day,
       currentMonth: cumulativeExpense,
@@ -205,37 +165,38 @@ export default function Reports() {
   });
 
   // Calculate average cumulative expense from previous 3 months
-  const prev3MonthsData = Array.from({ length: 3 }, (_, monthOffset) => {
+  const prev3MonthsData = Array.from({
+    length: 3
+  }, (_, monthOffset) => {
     const monthDate = subMonths(currentMonthStart, monthOffset + 1);
     const monthStart = startOfMonth(monthDate);
     const monthEnd = endOfMonth(monthDate);
-    
-    return { monthStart, monthEnd };
+    return {
+      monthStart,
+      monthEnd
+    };
   });
 
   // For each day, calculate average from previous 3 months
   dailyCumulativeExpense.forEach((dayData, dayIndex) => {
     const day = dayIndex + 1;
-    
-    const monthAverages = prev3MonthsData.map(({ monthStart, monthEnd }) => {
+    const monthAverages = prev3MonthsData.map(({
+      monthStart,
+      monthEnd
+    }) => {
       // Use the last day of the month if the current day doesn't exist in that month
       const daysInPrevMonth = getDaysInMonth(monthStart);
       const actualDay = Math.min(day, daysInPrevMonth);
       const dayDate = new Date(monthStart.getFullYear(), monthStart.getMonth(), actualDay);
-      
+
       // Calculate cumulative expense up to this day in that previous month
-      const cumulativeExpense = transactions
-        .filter((t) => {
-          const tDate = new Date(t.date);
-          return t.type === "expense" && 
-                 tDate >= monthStart && 
-                 tDate <= dayDate;
-        })
-        .reduce((sum, t) => sum + Number(t.amount), 0);
-      
+      const cumulativeExpense = transactions.filter(t => {
+        const tDate = new Date(t.date);
+        return t.type === "expense" && tDate >= monthStart && tDate <= dayDate;
+      }).reduce((sum, t) => sum + Number(t.amount), 0);
       return cumulativeExpense;
     });
-    
+
     // Calculate average from all 3 months
     const total = monthAverages.reduce((sum, val) => sum + val, 0);
     dayData.average3Months = total / 3;
@@ -244,15 +205,17 @@ export default function Reports() {
   // Calculate totals for current month
   const totalExpenseCurrentMonth = dailyCumulativeExpense[dailyCumulativeExpense.length - 1]?.currentMonth || 0;
   const totalAverage3Months = dailyCumulativeExpense[dailyCumulativeExpense.length - 1]?.average3Months || 0;
-
-  return (
-    <div className="space-y-6">
+  return <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold text-foreground">รายงาน</h1>
           <p className="text-muted-foreground mt-1">
-            รายงานสรุปและวิเคราะห์ทางการเงิน {format(startDate, "d MMM yyyy", { locale: th })} - {format(endDate, "d MMM yyyy", { locale: th })}
+            รายงานสรุปและวิเคราะห์ทางการเงิน {format(startDate, "d MMM yyyy", {
+            locale: th
+          })} - {format(endDate, "d MMM yyyy", {
+            locale: th
+          })}
           </p>
         </div>
 
@@ -275,7 +238,7 @@ export default function Reports() {
           <div className="flex flex-col gap-4">
             {/* Period Type */}
             <div className="flex flex-col sm:flex-row gap-4">
-              <Select value={periodType} onValueChange={(value) => handlePeriodChange(value as PeriodType)}>
+              <Select value={periodType} onValueChange={value => handlePeriodChange(value as PeriodType)}>
                 <SelectTrigger className="w-full sm:w-[250px]">
                   <FileText className="h-4 w-4 mr-2" />
                   <SelectValue />
@@ -290,55 +253,35 @@ export default function Reports() {
             </div>
 
             {/* Custom Date Range */}
-            {periodType === "custom" && (
-              <div className="flex flex-col sm:flex-row gap-4">
+            {periodType === "custom" && <div className="flex flex-col sm:flex-row gap-4">
                 <Popover>
                   <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className={cn(
-                        "w-full sm:w-[200px] justify-start text-left font-normal",
-                        !startDate && "text-muted-foreground"
-                      )}
-                    >
+                    <Button variant="outline" className={cn("w-full sm:w-[200px] justify-start text-left font-normal", !startDate && "text-muted-foreground")}>
                       <CalendarIcon className="mr-2 h-4 w-4" />
-                      {startDate ? format(startDate, "d MMM yyyy", { locale: th }) : <span>วันที่เริ่มต้น</span>}
+                      {startDate ? format(startDate, "d MMM yyyy", {
+                    locale: th
+                  }) : <span>วันที่เริ่มต้น</span>}
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
-                      mode="single"
-                      selected={startDate}
-                      onSelect={(date) => date && setStartDate(date)}
-                      initialFocus
-                    />
+                    <Calendar mode="single" selected={startDate} onSelect={date => date && setStartDate(date)} initialFocus />
                   </PopoverContent>
                 </Popover>
 
                 <Popover>
                   <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className={cn(
-                        "w-full sm:w-[200px] justify-start text-left font-normal",
-                        !endDate && "text-muted-foreground"
-                      )}
-                    >
+                    <Button variant="outline" className={cn("w-full sm:w-[200px] justify-start text-left font-normal", !endDate && "text-muted-foreground")}>
                       <CalendarIcon className="mr-2 h-4 w-4" />
-                      {endDate ? format(endDate, "d MMM yyyy", { locale: th }) : <span>วันที่สิ้นสุด</span>}
+                      {endDate ? format(endDate, "d MMM yyyy", {
+                    locale: th
+                  }) : <span>วันที่สิ้นสุด</span>}
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
-                      mode="single"
-                      selected={endDate}
-                      onSelect={(date) => date && setEndDate(date)}
-                      initialFocus
-                    />
+                    <Calendar mode="single" selected={endDate} onSelect={date => date && setEndDate(date)} initialFocus />
                   </PopoverContent>
                 </Popover>
-              </div>
-            )}
+              </div>}
           </div>
         </CardContent>
       </Card>
@@ -399,39 +342,26 @@ export default function Reports() {
                 <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
                 <XAxis dataKey="month" className="text-xs" />
                 <YAxis className="text-xs" />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: "hsl(var(--card))",
-                    border: "1px solid hsl(var(--border))",
-                    borderRadius: "8px",
-                  }}
-                  formatter={(value: number) => value.toLocaleString('th-TH', { maximumFractionDigits: 0 })}
-                />
+                <Tooltip contentStyle={{
+                backgroundColor: "hsl(var(--card))",
+                border: "1px solid hsl(var(--border))",
+                borderRadius: "8px"
+              }} formatter={(value: number) => value.toLocaleString('th-TH', {
+                maximumFractionDigits: 0
+              })} />
                 <Legend />
-                <Line
-                  type="monotone"
-                  dataKey="income"
-                  name="รายรับ"
-                  stroke="hsl(var(--income))"
-                  strokeWidth={3}
-                  dot={{ fill: "hsl(var(--income))", r: 4 }}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="expense"
-                  name="รายจ่าย"
-                  stroke="hsl(var(--expense))"
-                  strokeWidth={3}
-                  dot={{ fill: "hsl(var(--expense))", r: 4 }}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="net"
-                  name="สุทธิ"
-                  stroke="hsl(var(--primary))"
-                  strokeWidth={3}
-                  dot={{ fill: "hsl(var(--primary))", r: 4 }}
-                />
+                <Line type="monotone" dataKey="income" name="รายรับ" stroke="hsl(var(--income))" strokeWidth={3} dot={{
+                fill: "hsl(var(--income))",
+                r: 4
+              }} />
+                <Line type="monotone" dataKey="expense" name="รายจ่าย" stroke="hsl(var(--expense))" strokeWidth={3} dot={{
+                fill: "hsl(var(--expense))",
+                r: 4
+              }} />
+                <Line type="monotone" dataKey="net" name="สุทธิ" stroke="hsl(var(--primary))" strokeWidth={3} dot={{
+                fill: "hsl(var(--primary))",
+                r: 4
+              }} />
               </LineChart>
             </ResponsiveContainer>
           </CardContent>
@@ -448,14 +378,13 @@ export default function Reports() {
                 <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
                 <XAxis dataKey="category" className="text-xs" />
                 <YAxis className="text-xs" />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: "hsl(var(--card))",
-                    border: "1px solid hsl(var(--border))",
-                    borderRadius: "8px",
-                  }}
-                  formatter={(value: number) => value.toLocaleString('th-TH', { maximumFractionDigits: 0 })}
-                />
+                <Tooltip contentStyle={{
+                backgroundColor: "hsl(var(--card))",
+                border: "1px solid hsl(var(--border))",
+                borderRadius: "8px"
+              }} formatter={(value: number) => value.toLocaleString('th-TH', {
+                maximumFractionDigits: 0
+              })} />
                 <Legend />
                 <Bar dataKey="income" name="รายรับ" fill="hsl(var(--income))" radius={[4, 4, 0, 0]} />
                 <Bar dataKey="expense" name="รายจ่าย" fill="hsl(var(--expense))" radius={[4, 4, 0, 0]} />
@@ -468,7 +397,7 @@ export default function Reports() {
       {/* Cumulative Daily Expense Chart */}
       <Card>
         <CardHeader>
-          <CardTitle>รายงานประจำเดือนนี้</CardTitle>
+          <CardTitle>รายงานเปรียบเทียบรายจ่ายประจำเดือนนี้</CardTitle>
           <div className="flex flex-col sm:flex-row gap-4 mt-4">
             <div>
               <p className="text-sm text-muted-foreground">การใช้จ่ายทั้งหมด</p>
@@ -476,7 +405,10 @@ export default function Reports() {
             </div>
             <div>
               <p className="text-sm text-muted-foreground">รายจ่ายเฉลี่ยย้อนหลัง 3 เดือน</p>
-              <p className="text-2xl font-bold text-income">{totalAverage3Months.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+              <p className="text-2xl font-bold text-income">{totalAverage3Months.toLocaleString(undefined, {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+              })}</p>
             </div>
           </div>
         </CardHeader>
@@ -484,39 +416,32 @@ export default function Reports() {
           <ResponsiveContainer width="100%" height={350}>
             <LineChart data={dailyCumulativeExpense}>
               <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
-              <XAxis 
-                dataKey="day" 
-                className="text-xs"
-                label={{ value: `${format(currentMonthStart, 'MM/yyyy', { locale: th })}`, position: 'insideBottom', offset: -5 }}
-              />
+              <XAxis dataKey="day" className="text-xs" label={{
+              value: `${format(currentMonthStart, 'MM/yyyy', {
+                locale: th
+              })}`,
+              position: 'insideBottom',
+              offset: -5
+            }} />
               <YAxis className="text-xs" />
-              <Tooltip
-                contentStyle={{
-                  backgroundColor: "hsl(var(--card))",
-                  border: "1px solid hsl(var(--border))",
-                  borderRadius: "8px",
-                }}
-                formatter={(value: number) => value.toLocaleString('th-TH', { maximumFractionDigits: 0 })}
-                labelFormatter={(day) => `${day}/${format(currentMonthStart, 'MM/yyyy', { locale: th })}`}
-              />
+              <Tooltip contentStyle={{
+              backgroundColor: "hsl(var(--card))",
+              border: "1px solid hsl(var(--border))",
+              borderRadius: "8px"
+            }} formatter={(value: number) => value.toLocaleString('th-TH', {
+              maximumFractionDigits: 0
+            })} labelFormatter={day => `${day}/${format(currentMonthStart, 'MM/yyyy', {
+              locale: th
+            })}`} />
               <Legend />
-              <Line
-                type="monotone"
-                dataKey="currentMonth"
-                name="เดือนนี้"
-                stroke="hsl(var(--expense))"
-                strokeWidth={3}
-                dot={{ fill: "hsl(var(--expense))", r: 4 }}
-              />
-              <Line
-                type="monotone"
-                dataKey="average3Months"
-                name="ค่าเฉลี่ย 3 เดือนก่อนหน้า"
-                stroke="hsl(var(--muted-foreground))"
-                strokeWidth={2}
-                strokeDasharray="5 5"
-                dot={{ fill: "hsl(var(--muted-foreground))", r: 3 }}
-              />
+              <Line type="monotone" dataKey="currentMonth" name="เดือนนี้" stroke="hsl(var(--expense))" strokeWidth={3} dot={{
+              fill: "hsl(var(--expense))",
+              r: 4
+            }} />
+              <Line type="monotone" dataKey="average3Months" name="ค่าเฉลี่ย 3 เดือนก่อนหน้า" stroke="hsl(var(--muted-foreground))" strokeWidth={2} strokeDasharray="5 5" dot={{
+              fill: "hsl(var(--muted-foreground))",
+              r: 3
+            }} />
             </LineChart>
           </ResponsiveContainer>
         </CardContent>
@@ -541,8 +466,7 @@ export default function Reports() {
                 </tr>
               </thead>
               <tbody>
-                {monthlyComparison.map((row, index) => (
-                  <tr key={row.month} className="border-b border-border hover:bg-accent/50">
+                {monthlyComparison.map((row, index) => <tr key={row.month} className="border-b border-border hover:bg-accent/50">
                     <td className="py-3 px-4">{row.month}</td>
                     <td className="text-right py-3 px-4 text-income font-medium">
                       {row.income.toLocaleString()}
@@ -554,20 +478,14 @@ export default function Reports() {
                       {row.net.toLocaleString()}
                     </td>
                     <td className="text-right py-3 px-4">
-                      {row.income > 0 ? ((row.net / row.income) * 100).toFixed(1) : "0.0"}%
+                      {row.income > 0 ? (row.net / row.income * 100).toFixed(1) : "0.0"}%
                     </td>
                     <td className="text-center py-3 px-4">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => navigate(`/monthly-detail/${currentYear}/${index + 1}`)}
-                        className="h-8 w-8 p-0"
-                      >
+                      <Button variant="ghost" size="sm" onClick={() => navigate(`/monthly-detail/${currentYear}/${index + 1}`)} className="h-8 w-8 p-0">
                         <Eye className="h-4 w-4" />
                       </Button>
                     </td>
-                  </tr>
-                ))}
+                  </tr>)}
                 {/* Total Row */}
                 <tr className="border-t-2 border-border bg-accent/30 font-bold">
                   <td className="py-3 px-4">รวมทั้งหมด</td>
@@ -581,7 +499,7 @@ export default function Reports() {
                     {totalsRow.net.toLocaleString()}
                   </td>
                   <td className="text-right py-3 px-4">
-                    {totalsRow.income > 0 ? ((totalsRow.net / totalsRow.income) * 100).toFixed(1) : "0.0"}%
+                    {totalsRow.income > 0 ? (totalsRow.net / totalsRow.income * 100).toFixed(1) : "0.0"}%
                   </td>
                   <td></td>
                 </tr>
@@ -590,6 +508,5 @@ export default function Reports() {
           </div>
         </CardContent>
       </Card>
-    </div>
-  );
+    </div>;
 }
