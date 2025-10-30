@@ -574,7 +574,9 @@ export default function Reports() {
         {/* Monthly Trends */}
         <Card>
           <CardHeader>
-            <CardTitle>แนวโน้มรายเดือน (ปี {currentYear + 543})</CardTitle>
+            <CardTitle>
+              แนวโน้มรายเดือน <span className="text-muted-foreground">(ปี {currentYear + 543})</span>
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={350}>
@@ -610,7 +612,9 @@ export default function Reports() {
         {/* Category Comparison */}
         <Card>
           <CardHeader>
-            <CardTitle>เปรียบเทียบตามหมวดหมู่ ({getPeriodDisplayText()})</CardTitle>
+            <CardTitle>
+              เปรียบเทียบตามหมวดหมู่ <span className="text-muted-foreground">({getPeriodDisplayText()})</span>
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={350}>
@@ -637,7 +641,9 @@ export default function Reports() {
       {/* Cumulative Daily Expense Chart */}
       <Card>
         <CardHeader>
-          <CardTitle>เปรียบเทียบรายจ่าย{periodType === "yearly" ? "ปีก่อนหน้า" : periodType === "quarterly" ? "ไตรมาสก่อนหน้า" : "ย้อนหลัง 3 เดือน"} ({getPeriodDisplayText()})</CardTitle>
+          <CardTitle>
+            เปรียบเทียบรายจ่าย{periodType === "yearly" ? "ปีก่อนหน้า" : periodType === "quarterly" ? "ไตรมาสก่อนหน้า" : "ย้อนหลัง 3 เดือน"} <span className="text-muted-foreground">({getPeriodDisplayText()})</span>
+          </CardTitle>
           <div className="flex flex-col sm:flex-row gap-4 mt-4">
             <div>
               <p className="text-sm text-muted-foreground">การใช้จ่ายสะสม{periodType === "monthly" || periodType === "custom" ? "เดือนนี้" : periodType === "quarterly" ? "ไตรมาสนี้" : "ปีนี้"}</p>
