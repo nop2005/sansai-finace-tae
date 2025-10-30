@@ -141,9 +141,9 @@ export default function Income() {
       toast.success("บันทึกรายรับสำเร็จ", {
         description: `จำนวน ${parseFloat(formData.amount).toLocaleString()}`,
       });
-      // Reset form
+      // Reset form but keep the date
       setFormData({
-        date: new Date().toISOString().split('T')[0],
+        date: formData.date, // Keep the selected date
         category: "",
         item: "",
         amount: "",
