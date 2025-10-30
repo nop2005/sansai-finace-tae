@@ -37,6 +37,7 @@ export default function Transactions() {
   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedTransaction, setSelectedTransaction] = useState<any>(null);
+  const [userRoles, setUserRoles] = useState<string[]>([]);
   const [editForm, setEditForm] = useState({
     category_id: "",
     item_id: "",
@@ -47,6 +48,7 @@ export default function Transactions() {
 
   useEffect(() => {
     fetchData();
+    fetchUserRoles();
   }, [startDate, endDate]);
 
   const fetchData = async () => {
@@ -99,6 +101,20 @@ export default function Transactions() {
     setLoading(false);
   };
 
+  const fetchUserRoles = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    const { data: rolesData } = await supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", user.id);
+
+    if (rolesData) {
+      setUserRoles(rolesData.map(r => r.role));
+    }
+  };
+
   const getCategoryName = (categoryId: string, type: string) => {
     if (type === "income") {
       const category = incomeCategories.find((c) => c.id === categoryId);
@@ -127,6 +143,8 @@ export default function Transactions() {
     const profile = profiles.find((p) => p.id === userId);
     return profile ? profile.full_name || profile.username : "ไม่ทราบชื่อ";
   };
+
+  const canDelete = !userRoles.includes("ผู้บริหาร");
 
   const handleEdit = (transaction: any) => {
     setSelectedTransaction(transaction);
@@ -666,29 +684,31 @@ export default function Transactions() {
                                     {Number(transaction.amount).toLocaleString()}
                                  </p>
                                </div>
-                                <div className="flex gap-1">
-                                  <Button
-                                    size="sm"
-                                    variant="ghost"
-                                    onClick={() => handleViewDetails(transaction)}
-                                  >
-                                    <Eye className="h-4 w-4" />
-                                  </Button>
-                                  <Button
-                                    size="sm"
-                                    variant="ghost"
-                                    onClick={() => handleEdit(transaction)}
-                                  >
-                                    <Edit className="h-4 w-4" />
-                                  </Button>
-                                  <Button
-                                    size="sm"
-                                    variant="ghost"
-                                    onClick={() => handleDelete(transaction)}
-                                  >
-                                    <Trash2 className="h-4 w-4 text-destructive" />
-                                  </Button>
-                                </div>
+                                 <div className="flex gap-1">
+                                   <Button
+                                     size="sm"
+                                     variant="ghost"
+                                     onClick={() => handleViewDetails(transaction)}
+                                   >
+                                     <Eye className="h-4 w-4" />
+                                   </Button>
+                                   <Button
+                                     size="sm"
+                                     variant="ghost"
+                                     onClick={() => handleEdit(transaction)}
+                                   >
+                                     <Edit className="h-4 w-4" />
+                                   </Button>
+                                   {canDelete && (
+                                     <Button
+                                       size="sm"
+                                       variant="ghost"
+                                       onClick={() => handleDelete(transaction)}
+                                     >
+                                       <Trash2 className="h-4 w-4 text-destructive" />
+                                     </Button>
+                                   )}
+                                 </div>
                              </div>
                            </div>
                         );
@@ -776,29 +796,31 @@ export default function Transactions() {
                               {Number(transaction.amount).toLocaleString()}
                            </p>
                          </div>
-                          <div className="flex gap-1">
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => handleViewDetails(transaction)}
-                            >
-                              <Eye className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => handleEdit(transaction)}
-                            >
-                              <Edit className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => handleDelete(transaction)}
-                            >
-                              <Trash2 className="h-4 w-4 text-destructive" />
-                            </Button>
-                          </div>
+                           <div className="flex gap-1">
+                             <Button
+                               size="sm"
+                               variant="ghost"
+                               onClick={() => handleViewDetails(transaction)}
+                             >
+                               <Eye className="h-4 w-4" />
+                             </Button>
+                             <Button
+                               size="sm"
+                               variant="ghost"
+                               onClick={() => handleEdit(transaction)}
+                             >
+                               <Edit className="h-4 w-4" />
+                             </Button>
+                             {canDelete && (
+                               <Button
+                                 size="sm"
+                                 variant="ghost"
+                                 onClick={() => handleDelete(transaction)}
+                               >
+                                 <Trash2 className="h-4 w-4 text-destructive" />
+                               </Button>
+                             )}
+                           </div>
                        </div>
                      </div>
                   );
