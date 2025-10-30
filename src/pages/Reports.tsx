@@ -241,87 +241,89 @@ export default function Reports() {
     expense: amount
   }))].slice(0, 8);
 
-  // Calculate cumulative daily expenses - adapt based on period type
-  const daysInPeriod = differenceInDays(endDate, startDate) + 1;
-  
-  // Calculate comparison period based on period type
-  let comparisonStartDate: Date;
-  let comparisonEndDate: Date;
+  // Calculate cumulative expenses - adapt based on period type
+  let dailyCumulativeExpense: Array<{ day: number | string; currentMonth: number; average3Months: number }>;
   let comparisonLabel: string;
 
-  if (periodType === "yearly") {
-    // Compare with previous year
-    comparisonStartDate = subYears(startDate, 1);
-    comparisonEndDate = subYears(endDate, 1);
-    comparisonLabel = `ปีก่อนหน้า`;
-  } else if (periodType === "quarterly") {
-    // Compare with same quarter of previous year
-    comparisonStartDate = subYears(startDate, 1);
-    comparisonEndDate = subYears(endDate, 1);
-    comparisonLabel = `ไตรมาสเดียวกันปีก่อนหน้า`;
-  } else {
-    // Monthly and custom: compare with previous 3 months average (original logic)
-    comparisonStartDate = subMonths(startOfMonth(startDate), 3);
-    comparisonEndDate = subMonths(startOfMonth(startDate), 1);
-    comparisonLabel = `ค่าเฉลี่ย 3 เดือนก่อนหน้า`;
-  }
+  if (periodType === "yearly" || periodType === "quarterly") {
+    // For yearly/quarterly: show monthly data instead of daily
+    const monthsInPeriod = periodType === "yearly" ? 12 : 3;
+    const startMonth = startDate.getMonth();
+    
+    comparisonLabel = periodType === "yearly" ? "ปีก่อนหน้า" : "ไตรมาสเดียวกันปีก่อนหน้า";
+    const comparisonStartDate = subYears(startDate, 1);
+    const comparisonEndDate = subYears(endDate, 1);
 
-  const dailyCumulativeExpense = Array.from({
-    length: daysInPeriod
-  }, (_, dayIndex) => {
-    const day = dayIndex + 1;
-    const dayDate = new Date(startDate);
-    dayDate.setDate(startDate.getDate() + dayIndex);
-
-    // Calculate cumulative expense up to this day in current period
-    const cumulativeExpense = transactions.filter(t => {
-      const tDate = new Date(t.date);
-      return t.type === "expense" && tDate >= startDate && tDate <= dayDate;
-    }).reduce((sum, t) => sum + Number(t.amount), 0);
-
-    let comparisonValue = 0;
-
-    if (periodType === "yearly" || periodType === "quarterly") {
-      // For yearly/quarterly: compare with same day of previous period
-      const comparisonDayDate = new Date(comparisonStartDate);
-      comparisonDayDate.setDate(comparisonStartDate.getDate() + dayIndex);
+    dailyCumulativeExpense = Array.from({ length: monthsInPeriod }, (_, monthIndex) => {
+      const monthDate = new Date(startDate);
+      monthDate.setMonth(startMonth + monthIndex);
+      const monthEnd = endOfMonth(monthDate);
       
-      comparisonValue = transactions.filter(t => {
+      // Calculate cumulative expense up to end of this month in current period
+      const cumulativeExpense = transactions.filter(t => {
         const tDate = new Date(t.date);
-        return t.type === "expense" && tDate >= comparisonStartDate && tDate <= comparisonDayDate;
+        return t.type === "expense" && tDate >= startDate && tDate <= monthEnd;
       }).reduce((sum, t) => sum + Number(t.amount), 0);
-    } else {
-      // For monthly/custom: average from previous 3 months
+
+      // Calculate cumulative expense for comparison period
+      const comparisonMonthDate = new Date(comparisonStartDate);
+      comparisonMonthDate.setMonth(comparisonStartDate.getMonth() + monthIndex);
+      const comparisonMonthEnd = endOfMonth(comparisonMonthDate);
+
+      const comparisonValue = transactions.filter(t => {
+        const tDate = new Date(t.date);
+        return t.type === "expense" && tDate >= comparisonStartDate && tDate <= comparisonMonthEnd;
+      }).reduce((sum, t) => sum + Number(t.amount), 0);
+
+      return {
+        day: monthNames[monthDate.getMonth()], // Use month name instead of day number
+        currentMonth: cumulativeExpense,
+        average3Months: comparisonValue
+      };
+    });
+  } else {
+    // For monthly/custom: show daily data with 3-month average comparison
+    const daysInPeriod = differenceInDays(endDate, startDate) + 1;
+    comparisonLabel = "ค่าเฉลี่ย 3 เดือนก่อนหน้า";
+
+    dailyCumulativeExpense = Array.from({ length: daysInPeriod }, (_, dayIndex) => {
+      const dayDate = new Date(startDate);
+      dayDate.setDate(startDate.getDate() + dayIndex);
+
+      // Calculate cumulative expense up to this day in current period
+      const cumulativeExpense = transactions.filter(t => {
+        const tDate = new Date(t.date);
+        return t.type === "expense" && tDate >= startDate && tDate <= dayDate;
+      }).reduce((sum, t) => sum + Number(t.amount), 0);
+
+      // Average from previous 3 months
       const currentMonthStart = startOfMonth(startDate);
-      const prev3MonthsData = Array.from({
-        length: 3
-      }, (_, monthOffset) => {
+      const prev3MonthsData = Array.from({ length: 3 }, (_, monthOffset) => {
         const monthDate = subMonths(currentMonthStart, monthOffset + 1);
-        const monthStart = startOfMonth(monthDate);
-        return monthStart;
+        return startOfMonth(monthDate);
       });
 
       const monthAverages = prev3MonthsData.map((monthStart) => {
         const daysInPrevMonth = getDaysInMonth(monthStart);
-        const actualDay = Math.min(day, daysInPrevMonth);
-        const dayDate = new Date(monthStart.getFullYear(), monthStart.getMonth(), actualDay);
+        const actualDay = Math.min(dayIndex + 1, daysInPrevMonth);
+        const prevDayDate = new Date(monthStart.getFullYear(), monthStart.getMonth(), actualDay);
 
         return transactions.filter(t => {
           const tDate = new Date(t.date);
-          return t.type === "expense" && tDate >= monthStart && tDate <= dayDate;
+          return t.type === "expense" && tDate >= monthStart && tDate <= prevDayDate;
         }).reduce((sum, t) => sum + Number(t.amount), 0);
       });
 
       const total = monthAverages.reduce((sum, val) => sum + val, 0);
-      comparisonValue = total / 3;
-    }
+      const comparisonValue = total / 3;
 
-    return {
-      day,
-      currentMonth: cumulativeExpense,
-      average3Months: comparisonValue
-    };
-  });
+      return {
+        day: dayIndex + 1,
+        currentMonth: cumulativeExpense,
+        average3Months: comparisonValue
+      };
+    });
+  }
 
   // Calculate totals for current month
   const totalExpenseCurrentMonth = dailyCumulativeExpense[dailyCumulativeExpense.length - 1]?.currentMonth || 0;
