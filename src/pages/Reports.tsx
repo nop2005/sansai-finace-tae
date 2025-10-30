@@ -163,6 +163,21 @@ export default function Reports() {
     toast.success(`กำลังดาวน์โหลดรายงานในรูปแบบ ${format.toUpperCase()}`);
   };
 
+  // Get period display text for chart titles
+  const getPeriodDisplayText = () => {
+    if (periodType === "monthly") {
+      const month = thaiMonths.find(m => m.value === selectedMonth);
+      return `${month?.label} ${selectedYear}`;
+    } else if (periodType === "quarterly") {
+      const quarter = quarters.find(q => q.value === selectedQuarter);
+      return `${quarter?.label} ${quarter?.dateRange} ${selectedYear}`;
+    } else if (periodType === "yearly") {
+      return `ปี ${selectedYear}`;
+    } else {
+      return `${formatThaiShortDate(startDate)} - ${formatThaiShortDate(endDate)}`;
+    }
+  };
+
   // Calculate summary statistics
   const totalIncome = transactions.filter(t => t.type === "income").reduce((sum, t) => sum + Number(t.amount), 0);
   const totalExpense = transactions.filter(t => t.type === "expense").reduce((sum, t) => sum + Number(t.amount), 0);
@@ -526,7 +541,7 @@ export default function Reports() {
         {/* Category Comparison */}
         <Card>
           <CardHeader>
-            <CardTitle>เปรียบเทียบตามหมวดหมู่</CardTitle>
+            <CardTitle>เปรียบเทียบตามหมวดหมู่ ({getPeriodDisplayText()})</CardTitle>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={350}>
