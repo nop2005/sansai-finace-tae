@@ -408,34 +408,36 @@ export default function Reports() {
                   </SelectContent>
                 </Select>
               )}
+
+              {/* Custom Date Range - in same row */}
+              {periodType === "custom" && (
+                <>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button variant="outline" className={cn("w-full sm:w-[200px] justify-start text-left font-normal", !startDate && "text-muted-foreground")}>
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {startDate ? formatThaiShortDate(startDate) : <span>วันที่เริ่มต้น</span>}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar mode="single" selected={startDate} onSelect={date => date && setStartDate(date)} initialFocus />
+                    </PopoverContent>
+                  </Popover>
+
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button variant="outline" className={cn("w-full sm:w-[200px] justify-start text-left font-normal", !endDate && "text-muted-foreground")}>
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {endDate ? formatThaiShortDate(endDate) : <span>วันที่สิ้นสุด</span>}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar mode="single" selected={endDate} onSelect={date => date && setEndDate(date)} initialFocus />
+                    </PopoverContent>
+                  </Popover>
+                </>
+              )}
             </div>
-
-            {/* Custom Date Range */}
-            {periodType === "custom" && <div className="flex flex-col sm:flex-row gap-4">
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button variant="outline" className={cn("w-full sm:w-[200px] justify-start text-left font-normal", !startDate && "text-muted-foreground")}>
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {startDate ? formatThaiShortDate(startDate) : <span>วันที่เริ่มต้น</span>}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar mode="single" selected={startDate} onSelect={date => date && setStartDate(date)} initialFocus />
-                  </PopoverContent>
-                </Popover>
-
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button variant="outline" className={cn("w-full sm:w-[200px] justify-start text-left font-normal", !endDate && "text-muted-foreground")}>
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {endDate ? formatThaiShortDate(endDate) : <span>วันที่สิ้นสุด</span>}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar mode="single" selected={endDate} onSelect={date => date && setEndDate(date)} initialFocus />
-                  </PopoverContent>
-                </Popover>
-              </div>}
           </div>
         </CardContent>
       </Card>
