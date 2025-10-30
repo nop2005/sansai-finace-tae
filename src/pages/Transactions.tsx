@@ -399,6 +399,27 @@ export default function Transactions() {
     return pages;
   };
 
+  // Group transactions by date for the regular list view
+  interface DateGroup {
+    date: string;
+    transactions: any[];
+  }
+
+  const groupedByDate = paginatedTransactions.reduce((groups, transaction) => {
+    const dateKey = format(new Date(transaction.date), "yyyy-MM-dd");
+    
+    if (!groups[dateKey]) {
+      groups[dateKey] = {
+        date: dateKey,
+        transactions: []
+      };
+    }
+    
+    groups[dateKey].transactions.push(transaction);
+    
+    return groups;
+  }, {} as Record<string, DateGroup>);
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -790,114 +811,122 @@ export default function Transactions() {
                   </div>
                 ))
               ) : (
-                // Regular list view (sorted by date) with pagination
-                paginatedTransactions.map((transaction) => {
-                  const categoryName = getCategoryName(transaction.category_id, transaction.type);
-                  const itemName = getItemName(transaction.item_id, transaction.type);
-                  const attachmentCount = getAttachmentCount(transaction.id);
+                // Regular list view (sorted by date) grouped by date
+                (Object.values(groupedByDate) as DateGroup[]).map((dateGroup) => (
+                  <div key={dateGroup.date} className="space-y-2">
+                    {/* Date Header */}
+                    <div className="text-sm text-muted-foreground font-medium px-2">
+                      {formatThaiShortDate(new Date(dateGroup.date))}
+                    </div>
 
-                  return (
-                    <div
-                      key={transaction.id}
-                      className="flex items-center justify-between p-4 rounded-lg border border-border hover:bg-accent/50 transition-colors"
-                    >
-                      <div className="flex items-center gap-4 flex-1">
-                        {/* Icon */}
-                        <div
-                          className={`p-2 rounded-lg ${
-                            transaction.type === "income"
-                              ? "bg-income/10"
-                              : "bg-expense/10"
-                          }`}
-                        >
-                          {transaction.type === "income" ? (
-                            <TrendingUp className="h-5 w-5 text-income" />
-                          ) : (
-                            <TrendingDown className="h-5 w-5 text-expense" />
-                          )}
-                        </div>
+                    {/* Transactions for this date */}
+                    <div className="space-y-2">
+                      {dateGroup.transactions.map((transaction) => {
+                        const categoryName = getCategoryName(transaction.category_id, transaction.type);
+                        const itemName = getItemName(transaction.item_id, transaction.type);
+                        const attachmentCount = getAttachmentCount(transaction.id);
 
-                         {/* Details */}
-                         <div className="flex-1 min-w-0">
-                           <div className="flex items-center gap-2 mb-1 flex-wrap">
-                             <p className="font-medium">{itemName || transaction.description || "ไม่ระบุ"}</p>
-                             <Badge variant="outline" className="text-xs">
-                               {categoryName}
-                             </Badge>
-                             {transaction.edited && (
-                               <Badge variant="outline" className="text-xs border-orange-500 text-orange-500">
-                                 <AlertCircle className="h-3 w-3 mr-1" />
-                                 แก้ไขแล้ว
-                               </Badge>
-                             )}
-                             {attachmentCount > 0 && (
-                               <Badge variant="secondary" className="text-xs">
-                                 <FileText className="h-3 w-3 mr-1" />
-                                 {attachmentCount} ไฟล์
-                               </Badge>
-                             )}
-                           </div>
-                           <div className="flex items-center gap-3 text-sm text-muted-foreground flex-wrap">
-                             <span>{formatThaiShortDate(new Date(transaction.date))}</span>
-                            {transaction.reference && (
-                              <>
-                                <span>•</span>
-                                <span>{transaction.reference}</span>
-                              </>
-                            )}
-                            {transaction.description && (
-                              <>
-                                <span>•</span>
-                                <span className="truncate max-w-[200px]">{transaction.description}</span>
-                              </>
-                            )}
+                        return (
+                          <div
+                            key={transaction.id}
+                            className="flex items-center justify-between p-4 rounded-lg border border-border hover:bg-accent/50 transition-colors"
+                          >
+                            <div className="flex items-center gap-4 flex-1">
+                              {/* Icon */}
+                              <div
+                                className={`p-2 rounded-lg ${
+                                  transaction.type === "income"
+                                    ? "bg-income/10"
+                                    : "bg-expense/10"
+                                }`}
+                              >
+                                {transaction.type === "income" ? (
+                                  <TrendingUp className="h-5 w-5 text-income" />
+                                ) : (
+                                  <TrendingDown className="h-5 w-5 text-expense" />
+                                )}
+                              </div>
+
+                              {/* Details */}
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-2 mb-1 flex-wrap">
+                                  <p className="font-medium">{itemName || transaction.description || "ไม่ระบุ"}</p>
+                                  <Badge variant="outline" className="text-xs">
+                                    {categoryName}
+                                  </Badge>
+                                  {transaction.edited && (
+                                    <Badge variant="outline" className="text-xs border-orange-500 text-orange-500">
+                                      <AlertCircle className="h-3 w-3 mr-1" />
+                                      แก้ไขแล้ว
+                                    </Badge>
+                                  )}
+                                  {attachmentCount > 0 && (
+                                    <Badge variant="secondary" className="text-xs">
+                                      <FileText className="h-3 w-3 mr-1" />
+                                      {attachmentCount} ไฟล์
+                                    </Badge>
+                                  )}
+                                </div>
+                                <div className="flex items-center gap-3 text-sm text-muted-foreground flex-wrap">
+                                  {transaction.reference && (
+                                    <span>{transaction.reference}</span>
+                                  )}
+                                  {transaction.description && (
+                                    <>
+                                      {transaction.reference && <span>•</span>}
+                                      <span className="truncate max-w-[200px]">{transaction.description}</span>
+                                    </>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Amount and Actions */}
+                            <div className="flex items-center gap-2 ml-4">
+                              <div className="text-right">
+                                <p
+                                  className={`text-lg font-bold ${
+                                    transaction.type === "income"
+                                      ? "text-income"
+                                      : "text-expense"
+                                  }`}
+                                >
+                                  {transaction.type === "income" ? "+" : "-"}
+                                  {Number(transaction.amount).toLocaleString()}
+                                </p>
+                              </div>
+                              <div className="flex gap-1">
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  onClick={() => handleViewDetails(transaction)}
+                                >
+                                  <Eye className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  onClick={() => handleEdit(transaction)}
+                                >
+                                  <Edit className="h-4 w-4" />
+                                </Button>
+                                {canDelete && (
+                                  <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    onClick={() => handleDelete(transaction)}
+                                  >
+                                    <Trash2 className="h-4 w-4 text-destructive" />
+                                  </Button>
+                                )}
+                              </div>
+                            </div>
                           </div>
-                        </div>
-                      </div>
-
-                       {/* Amount and Actions */}
-                       <div className="flex items-center gap-2 ml-4">
-                         <div className="text-right">
-                           <p
-                             className={`text-lg font-bold ${
-                               transaction.type === "income"
-                                 ? "text-income"
-                                 : "text-expense"
-                             }`}
-                           >
-                             {transaction.type === "income" ? "+" : "-"}
-                              {Number(transaction.amount).toLocaleString()}
-                           </p>
-                         </div>
-                           <div className="flex gap-1">
-                             <Button
-                               size="sm"
-                               variant="ghost"
-                               onClick={() => handleViewDetails(transaction)}
-                             >
-                               <Eye className="h-4 w-4" />
-                             </Button>
-                             <Button
-                               size="sm"
-                               variant="ghost"
-                               onClick={() => handleEdit(transaction)}
-                             >
-                               <Edit className="h-4 w-4" />
-                             </Button>
-                             {canDelete && (
-                               <Button
-                                 size="sm"
-                                 variant="ghost"
-                                 onClick={() => handleDelete(transaction)}
-                               >
-                                 <Trash2 className="h-4 w-4 text-destructive" />
-                               </Button>
-                             )}
-                           </div>
-                       </div>
-                     </div>
-                  );
-                })
+                        );
+                      })}
+                    </div>
+                  </div>
+                ))
               )}
             </div>
           )}
