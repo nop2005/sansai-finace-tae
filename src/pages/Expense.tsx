@@ -4,15 +4,20 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Combobox, ComboboxOption } from "@/components/ui/combobox";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useState, useMemo } from "react";
 import { toast } from "sonner";
-import { TrendingDown, Upload, X } from "lucide-react";
+import { TrendingDown, Upload, X, CalendarIcon } from "lucide-react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { formatThaiShortDate } from "@/utils/dateFormat";
+import { format } from "date-fns";
+import { cn } from "@/lib/utils";
 
 export default function Expense() {
   const [formData, setFormData] = useState({
-    date: new Date().toISOString().split('T')[0],
+    date: new Date(),
     category: "",
     item: "",
     amount: "",
@@ -93,7 +98,7 @@ export default function Expense() {
         .insert([
           {
             type: "expense",
-            date: formData.date,
+            date: format(formData.date, "yyyy-MM-dd"),
             category_id: formData.category || null,
             item_id: formData.item || null,
             amount: parseFloat(formData.amount),
@@ -198,13 +203,28 @@ export default function Expense() {
               {/* Date */}
               <div className="space-y-2">
                 <Label htmlFor="date">วันที่ *</Label>
-                <Input
-                  id="date"
-                  type="date"
-                  value={formData.date}
-                  onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-                  required
-                />
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        "w-full justify-start text-left font-normal",
+                        !formData.date && "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {formData.date ? formatThaiShortDate(formData.date) : <span>เลือกวันที่</span>}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0">
+                    <Calendar
+                      mode="single"
+                      selected={formData.date}
+                      onSelect={(date) => date && setFormData({ ...formData, date })}
+                      initialFocus
+                    />
+                  </PopoverContent>
+                </Popover>
               </div>
 
               {/* Category */}
@@ -333,7 +353,7 @@ export default function Expense() {
                 variant="outline"
                 onClick={() => {
                   setFormData({
-                    date: new Date().toISOString().split('T')[0],
+                    date: new Date(),
                     category: "",
                     item: "",
                     amount: "",

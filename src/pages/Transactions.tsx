@@ -16,6 +16,7 @@ import { format, startOfMonth, endOfMonth } from "date-fns";
 import { th } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { formatThaiShortDate, formatThaiLongDate, formatThaiDateTime } from "@/utils/dateFormat";
 
 export default function Transactions() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -326,7 +327,7 @@ export default function Transactions() {
       <div>
         <h1 className="text-3xl font-bold text-foreground">รายการทั้งหมด</h1>
         <p className="text-muted-foreground mt-1">
-          ประวัติรายรับรายจ่าย {format(startDate, "d MMM yyyy", { locale: th })} - {format(endDate, "d MMM yyyy", { locale: th })}
+          ประวัติรายรับรายจ่าย {formatThaiShortDate(startDate)} - {formatThaiShortDate(endDate)}
         </p>
       </div>
 
@@ -346,7 +347,7 @@ export default function Transactions() {
                     )}
                   >
                     <CalendarIcon className="mr-2 h-4 w-4" />
-                    {startDate ? format(startDate, "d MMM yyyy", { locale: th }) : <span>วันที่เริ่มต้น</span>}
+                    {startDate ? formatThaiShortDate(startDate) : <span>วันที่เริ่มต้น</span>}
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0" align="start">
@@ -369,7 +370,7 @@ export default function Transactions() {
                     )}
                   >
                     <CalendarIcon className="mr-2 h-4 w-4" />
-                    {endDate ? format(endDate, "d MMM yyyy", { locale: th }) : <span>วันที่สิ้นสุด</span>}
+                    {endDate ? formatThaiShortDate(endDate) : <span>วันที่สิ้นสุด</span>}
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0" align="start">
@@ -631,8 +632,8 @@ export default function Transactions() {
                                      </Badge>
                                    )}
                                  </div>
-                                <div className="flex items-center gap-3 text-sm text-muted-foreground flex-wrap">
-                                  <span>{format(new Date(transaction.date), "d MMM yyyy", { locale: th })}</span>
+                                 <div className="flex items-center gap-3 text-sm text-muted-foreground flex-wrap">
+                                   <span>{formatThaiShortDate(new Date(transaction.date))}</span>
                                   {transaction.reference && (
                                     <>
                                       <span>•</span>
@@ -741,8 +742,8 @@ export default function Transactions() {
                                </Badge>
                              )}
                            </div>
-                          <div className="flex items-center gap-3 text-sm text-muted-foreground flex-wrap">
-                            <span>{format(new Date(transaction.date), "d MMM yyyy", { locale: th })}</span>
+                           <div className="flex items-center gap-3 text-sm text-muted-foreground flex-wrap">
+                             <span>{formatThaiShortDate(new Date(transaction.date))}</span>
                             {transaction.reference && (
                               <>
                                 <span>•</span>
@@ -895,7 +896,7 @@ export default function Transactions() {
                 <PopoverTrigger asChild>
                   <Button variant="outline" className="w-full justify-start text-left font-normal">
                     <CalendarIcon className="mr-2 h-4 w-4" />
-                    {format(editForm.date, "d MMM yyyy", { locale: th })}
+                    {formatThaiShortDate(editForm.date)}
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0" align="start">
@@ -974,7 +975,7 @@ export default function Transactions() {
               <div>
                 <p className="text-sm text-muted-foreground">วันที่</p>
                 <p className="font-medium">
-                  {format(new Date(selectedTransaction.date), "d MMMM yyyy", { locale: th })}
+                  {formatThaiLongDate(new Date(selectedTransaction.date))}
                 </p>
               </div>
 
@@ -999,7 +1000,7 @@ export default function Transactions() {
                   <div>
                     <p className="text-sm text-muted-foreground">วันที่บันทึก</p>
                     <p className="font-medium">
-                      {format(new Date(selectedTransaction.created_at), "d MMMM yyyy HH:mm น.", { locale: th })}
+                      {formatThaiDateTime(new Date(selectedTransaction.created_at))}
                     </p>
                   </div>
                 </div>
@@ -1023,7 +1024,7 @@ export default function Transactions() {
                       <div>
                         <p className="text-sm text-muted-foreground">วันที่แก้ไข</p>
                         <p className="font-medium">
-                          {format(new Date(selectedTransaction.edited_at), "d MMMM yyyy HH:mm น.", { locale: th })}
+                          {formatThaiDateTime(new Date(selectedTransaction.edited_at))}
                         </p>
                       </div>
                       <div>

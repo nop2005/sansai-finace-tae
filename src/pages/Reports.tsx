@@ -11,6 +11,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { format, startOfMonth, endOfMonth, startOfYear, endOfYear, startOfQuarter, endOfQuarter, subMonths, eachDayOfInterval, getDaysInMonth } from "date-fns";
 import { th } from "date-fns/locale";
+import { formatThaiShortDate } from "@/utils/dateFormat";
 import { cn } from "@/lib/utils";
 type PeriodType = "custom" | "monthly" | "quarterly" | "yearly";
 export default function Reports() {
@@ -211,11 +212,7 @@ export default function Reports() {
         <div>
           <h1 className="text-3xl font-bold text-foreground">รายงาน</h1>
           <p className="text-muted-foreground mt-1">
-            รายงานสรุปและวิเคราะห์ทางการเงิน {format(startDate, "d MMM yyyy", {
-            locale: th
-          })} - {format(endDate, "d MMM yyyy", {
-            locale: th
-          })}
+            รายงานสรุปและวิเคราะห์ทางการเงิน {formatThaiShortDate(startDate)} - {formatThaiShortDate(endDate)}
           </p>
         </div>
 
@@ -258,9 +255,7 @@ export default function Reports() {
                   <PopoverTrigger asChild>
                     <Button variant="outline" className={cn("w-full sm:w-[200px] justify-start text-left font-normal", !startDate && "text-muted-foreground")}>
                       <CalendarIcon className="mr-2 h-4 w-4" />
-                      {startDate ? format(startDate, "d MMM yyyy", {
-                    locale: th
-                  }) : <span>วันที่เริ่มต้น</span>}
+                      {startDate ? formatThaiShortDate(startDate) : <span>วันที่เริ่มต้น</span>}
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-auto p-0" align="start">
@@ -272,9 +267,7 @@ export default function Reports() {
                   <PopoverTrigger asChild>
                     <Button variant="outline" className={cn("w-full sm:w-[200px] justify-start text-left font-normal", !endDate && "text-muted-foreground")}>
                       <CalendarIcon className="mr-2 h-4 w-4" />
-                      {endDate ? format(endDate, "d MMM yyyy", {
-                    locale: th
-                  }) : <span>วันที่สิ้นสุด</span>}
+                      {endDate ? formatThaiShortDate(endDate) : <span>วันที่สิ้นสุด</span>}
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-auto p-0" align="start">
