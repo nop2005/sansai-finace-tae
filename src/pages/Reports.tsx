@@ -154,10 +154,10 @@ export default function Reports() {
   ];
 
   const quarters = [
-    { value: 1, label: "ไตรมาส 1" },
-    { value: 2, label: "ไตรมาส 2" },
-    { value: 3, label: "ไตรมาส 3" },
-    { value: 4, label: "ไตรมาส 4" },
+    { value: 1, label: "ไตรมาส 1", dateRange: "(1 ม.ค. - 31 มี.ค.)" },
+    { value: 2, label: "ไตรมาส 2", dateRange: "(1 เม.ย. - 30 มิ.ย.)" },
+    { value: 3, label: "ไตรมาส 3", dateRange: "(1 ก.ค. - 30 ก.ย.)" },
+    { value: 4, label: "ไตรมาส 4", dateRange: "(1 ต.ค. - 31 ธ.ค.)" },
   ];
   const handleDownload = (format: string) => {
     toast.success(`กำลังดาวน์โหลดรายงานในรูปแบบ ${format.toUpperCase()}`);
@@ -366,13 +366,13 @@ export default function Reports() {
               {periodType === "quarterly" && (
                 <>
                   <Select value={selectedQuarter.toString()} onValueChange={handleQuarterChange}>
-                    <SelectTrigger className="w-full sm:w-[180px]">
+                    <SelectTrigger className="w-full sm:w-[280px]">
                       <SelectValue placeholder="เลือกไตรมาส" />
                     </SelectTrigger>
                     <SelectContent>
                       {quarters.map(quarter => (
                         <SelectItem key={quarter.value} value={quarter.value.toString()}>
-                          {quarter.label}
+                          {quarter.label} {quarter.dateRange}
                         </SelectItem>
                       ))}
                     </SelectContent>
