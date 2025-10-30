@@ -9,11 +9,13 @@ import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, L
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { format, startOfMonth, endOfMonth, startOfYear, endOfYear, startOfQuarter, endOfQuarter, subMonths, eachDayOfInterval, getDaysInMonth } from "date-fns";
+import { format, startOfMonth, endOfMonth, startOfYear, endOfYear, startOfQuarter, endOfQuarter, subMonths, eachDayOfInterval, getDaysInMonth, getYear, getMonth, setMonth, setYear } from "date-fns";
 import { th } from "date-fns/locale";
 import { formatThaiShortDate } from "@/utils/dateFormat";
 import { cn } from "@/lib/utils";
+
 type PeriodType = "custom" | "monthly" | "quarterly" | "yearly";
+
 export default function Reports() {
   const navigate = useNavigate();
   const [periodType, setPeriodType] = useState<PeriodType>("monthly");
@@ -23,6 +25,11 @@ export default function Reports() {
   const [incomeCategories, setIncomeCategories] = useState<any[]>([]);
   const [expenseCategories, setExpenseCategories] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  
+  // New state for dropdowns
+  const [selectedMonth, setSelectedMonth] = useState<number>(getMonth(new Date()));
+  const [selectedQuarter, setSelectedQuarter] = useState<number>(Math.floor(getMonth(new Date()) / 3) + 1);
+  const [selectedYear, setSelectedYear] = useState<number>(getYear(new Date()) + 543); // Buddhist year
   useEffect(() => {
     fetchData();
   }, [startDate, endDate]);
@@ -60,22 +67,98 @@ export default function Reports() {
     const now = new Date();
     switch (value) {
       case "monthly":
-        setStartDate(startOfMonth(now));
-        setEndDate(endOfMonth(now));
+        setSelectedMonth(getMonth(now));
+        setSelectedYear(getYear(now) + 543);
+        updateMonthlyDates(getMonth(now), getYear(now) + 543);
         break;
       case "quarterly":
-        setStartDate(startOfQuarter(now));
-        setEndDate(endOfQuarter(now));
+        setSelectedQuarter(Math.floor(getMonth(now) / 3) + 1);
+        setSelectedYear(getYear(now) + 543);
+        updateQuarterlyDates(Math.floor(getMonth(now) / 3) + 1, getYear(now) + 543);
         break;
       case "yearly":
-        setStartDate(startOfYear(now));
-        setEndDate(endOfYear(now));
+        setSelectedYear(getYear(now) + 543);
+        updateYearlyDates(getYear(now) + 543);
         break;
       case "custom":
         // Keep current dates
         break;
     }
   };
+
+  const updateMonthlyDates = (month: number, buddhistYear: number) => {
+    const christianYear = buddhistYear - 543;
+    const date = setYear(setMonth(new Date(), month), christianYear);
+    setStartDate(startOfMonth(date));
+    setEndDate(endOfMonth(date));
+  };
+
+  const updateQuarterlyDates = (quarter: number, buddhistYear: number) => {
+    const christianYear = buddhistYear - 543;
+    const firstMonthOfQuarter = (quarter - 1) * 3;
+    const date = setYear(setMonth(new Date(), firstMonthOfQuarter), christianYear);
+    setStartDate(startOfQuarter(date));
+    setEndDate(endOfQuarter(date));
+  };
+
+  const updateYearlyDates = (buddhistYear: number) => {
+    const christianYear = buddhistYear - 543;
+    const date = setYear(new Date(), christianYear);
+    setStartDate(startOfYear(date));
+    setEndDate(endOfYear(date));
+  };
+
+  const handleMonthChange = (month: string) => {
+    const monthNum = parseInt(month);
+    setSelectedMonth(monthNum);
+    updateMonthlyDates(monthNum, selectedYear);
+  };
+
+  const handleQuarterChange = (quarter: string) => {
+    const quarterNum = parseInt(quarter);
+    setSelectedQuarter(quarterNum);
+    updateQuarterlyDates(quarterNum, selectedYear);
+  };
+
+  const handleYearChange = (year: string) => {
+    const yearNum = parseInt(year);
+    setSelectedYear(yearNum);
+    
+    if (periodType === "monthly") {
+      updateMonthlyDates(selectedMonth, yearNum);
+    } else if (periodType === "quarterly") {
+      updateQuarterlyDates(selectedQuarter, yearNum);
+    } else if (periodType === "yearly") {
+      updateYearlyDates(yearNum);
+    }
+  };
+
+  // Generate year options (current year + 5 years back in Buddhist calendar)
+  const currentBuddhistYear = getYear(new Date()) + 543;
+  const yearOptions = Array.from({ length: 6 }, (_, i) => currentBuddhistYear - i);
+
+  // Month names in Thai
+  const thaiMonths = [
+    { value: 0, label: "มกราคม" },
+    { value: 1, label: "กุมภาพันธ์" },
+    { value: 2, label: "มีนาคม" },
+    { value: 3, label: "เมษายน" },
+    { value: 4, label: "พฤษภาคม" },
+    { value: 5, label: "มิถุนายน" },
+    { value: 6, label: "กรกฎาคม" },
+    { value: 7, label: "สิงหาคม" },
+    { value: 8, label: "กันยายน" },
+    { value: 9, label: "ตุลาคม" },
+    { value: 10, label: "พฤศจิกายน" },
+    { value: 11, label: "ธันวาคม" },
+  ];
+
+  const quarters = [
+    { value: 1, label: "ไตรมาส 1" },
+    { value: 2, label: "ไตรมาส 2" },
+    { value: 3, label: "ไตรมาส 3" },
+    { value: 4, label: "ไตรมาส 4" },
+  ];
   const handleDownload = (format: string) => {
     toast.success(`กำลังดาวน์โหลดรายงานในรูปแบบ ${format.toUpperCase()}`);
   };
@@ -247,6 +330,84 @@ export default function Reports() {
                   <SelectItem value="custom">กำหนดเอง</SelectItem>
                 </SelectContent>
               </Select>
+
+              {/* Month Selection */}
+              {periodType === "monthly" && (
+                <>
+                  <Select value={selectedMonth.toString()} onValueChange={handleMonthChange}>
+                    <SelectTrigger className="w-full sm:w-[180px]">
+                      <SelectValue placeholder="เลือกเดือน" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {thaiMonths.map(month => (
+                        <SelectItem key={month.value} value={month.value.toString()}>
+                          {month.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  
+                  <Select value={selectedYear.toString()} onValueChange={handleYearChange}>
+                    <SelectTrigger className="w-full sm:w-[150px]">
+                      <SelectValue placeholder="เลือกปี" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {yearOptions.map(year => (
+                        <SelectItem key={year} value={year.toString()}>
+                          {year}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </>
+              )}
+
+              {/* Quarter Selection */}
+              {periodType === "quarterly" && (
+                <>
+                  <Select value={selectedQuarter.toString()} onValueChange={handleQuarterChange}>
+                    <SelectTrigger className="w-full sm:w-[180px]">
+                      <SelectValue placeholder="เลือกไตรมาส" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {quarters.map(quarter => (
+                        <SelectItem key={quarter.value} value={quarter.value.toString()}>
+                          {quarter.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  
+                  <Select value={selectedYear.toString()} onValueChange={handleYearChange}>
+                    <SelectTrigger className="w-full sm:w-[150px]">
+                      <SelectValue placeholder="เลือกปี" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {yearOptions.map(year => (
+                        <SelectItem key={year} value={year.toString()}>
+                          {year}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </>
+              )}
+
+              {/* Year Selection */}
+              {periodType === "yearly" && (
+                <Select value={selectedYear.toString()} onValueChange={handleYearChange}>
+                  <SelectTrigger className="w-full sm:w-[150px]">
+                    <SelectValue placeholder="เลือกปี" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {yearOptions.map(year => (
+                      <SelectItem key={year} value={year.toString()}>
+                        {year}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
             </div>
 
             {/* Custom Date Range */}
