@@ -397,8 +397,9 @@ export default function Reports() {
       </div>
 
       {/* Filters */}
-      <Card>
-        <CardContent className="pt-6">
+      <div className="sticky top-0 z-10 bg-background pb-4">
+        <Card>
+          <CardContent className="pt-6">
           <div className="flex flex-col gap-4">
             {/* Period Type */}
             <div className="flex flex-col sm:flex-row gap-4">
@@ -525,6 +526,7 @@ export default function Reports() {
           </div>
         </CardContent>
       </Card>
+      </div>
 
       {/* Summary Stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
