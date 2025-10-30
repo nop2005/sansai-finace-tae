@@ -384,102 +384,101 @@ export default function Transactions() {
               </Popover>
             </div>
 
-            {/* Type Filter Buttons */}
-            <div className="flex gap-2">
-              <Button
-                variant={filterType === "all" ? "default" : "outline"}
-                onClick={() => {
-                  setFilterType("all");
-                  setCategoryFilter("all");
-                }}
-                className="flex-1 sm:flex-initial"
-              >
-                ทั้งหมด
-              </Button>
-              <Button
-                variant={filterType === "income" ? "default" : "outline"}
-                onClick={() => {
-                  setFilterType("income");
-                  setCategoryFilter("all");
-                }}
-                className="flex-1 sm:flex-initial"
-              >
-                <TrendingUp className="h-4 w-4 mr-2" />
-                รายรับ
-              </Button>
-              <Button
-                variant={filterType === "expense" ? "default" : "outline"}
-                onClick={() => {
-                  setFilterType("expense");
-                  setCategoryFilter("all");
-                }}
-                className="flex-1 sm:flex-initial"
-              >
-                <TrendingDown className="h-4 w-4 mr-2" />
-                รายจ่าย
-              </Button>
-            </div>
-
-            {/* Search and Category Filter */}
-            <div className="flex flex-col md:flex-row gap-4">
-              {/* Search */}
-              <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="ค้นหารายการ, เลขที่อ้างอิง, หมวดหมู่..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
-                />
+            {/* Type Filter Buttons and Category Filter */}
+            <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
+              <div className="flex gap-2">
+                <Button
+                  variant={filterType === "all" ? "default" : "outline"}
+                  onClick={() => {
+                    setFilterType("all");
+                    setCategoryFilter("all");
+                  }}
+                  className="flex-1 sm:flex-initial"
+                >
+                  ทั้งหมด
+                </Button>
+                <Button
+                  variant={filterType === "income" ? "default" : "outline"}
+                  onClick={() => {
+                    setFilterType("income");
+                    setCategoryFilter("all");
+                  }}
+                  className="flex-1 sm:flex-initial"
+                >
+                  <TrendingUp className="h-4 w-4 mr-2" />
+                  รายรับ
+                </Button>
+                <Button
+                  variant={filterType === "expense" ? "default" : "outline"}
+                  onClick={() => {
+                    setFilterType("expense");
+                    setCategoryFilter("all");
+                  }}
+                  className="flex-1 sm:flex-initial"
+                >
+                  <TrendingDown className="h-4 w-4 mr-2" />
+                  รายจ่าย
+                </Button>
               </div>
 
               {/* Category Filter */}
-              <div className="flex items-center gap-3 w-full md:w-auto">
+              <div className="flex items-center gap-3 w-full sm:w-auto ml-0 sm:ml-4">
                 <span className="text-sm font-medium whitespace-nowrap">หมวดหมู่</span>
                 <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-                  <SelectTrigger className="w-full md:w-[200px]">
+                  <SelectTrigger className="w-full sm:w-[200px]">
                     <Filter className="h-4 w-4 mr-2" />
                     <SelectValue placeholder="ทั้งหมด" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">ทั้งหมด</SelectItem>
-                  {filterType === "all" ? (
-                    <>
-                      {incomeCategories.length > 0 && (
-                        <>
-                          <div className="px-2 py-1.5 text-sm font-semibold text-income">
-                            รายรับ
-                          </div>
-                          {incomeCategories.map((category) => (
-                            <SelectItem key={category.id} value={category.id}>
-                              {category.name}
-                            </SelectItem>
-                          ))}
-                        </>
-                      )}
-                      {expenseCategories.length > 0 && (
-                        <>
-                          <div className="px-2 py-1.5 text-sm font-semibold text-expense mt-2">
-                            รายจ่าย
-                          </div>
-                          {expenseCategories.map((category) => (
-                            <SelectItem key={category.id} value={category.id}>
-                              {category.name}
-                            </SelectItem>
-                          ))}
-                        </>
-                      )}
-                    </>
-                  ) : (
-                    availableCategories.map((category) => (
-                      <SelectItem key={category.id} value={category.id}>
-                        {category.name}
-                      </SelectItem>
-                    ))
-                  )}
-                </SelectContent>
-              </Select>
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">ทั้งหมด</SelectItem>
+                    {filterType === "all" ? (
+                      <>
+                        {incomeCategories.length > 0 && (
+                          <>
+                            <div className="px-2 py-1.5 text-sm font-semibold text-income">
+                              รายรับ
+                            </div>
+                            {incomeCategories.map((category) => (
+                              <SelectItem key={category.id} value={category.id}>
+                                {category.name}
+                              </SelectItem>
+                            ))}
+                          </>
+                        )}
+                        {expenseCategories.length > 0 && (
+                          <>
+                            <div className="px-2 py-1.5 text-sm font-semibold text-expense mt-2">
+                              รายจ่าย
+                            </div>
+                            {expenseCategories.map((category) => (
+                              <SelectItem key={category.id} value={category.id}>
+                                {category.name}
+                              </SelectItem>
+                            ))}
+                          </>
+                        )}
+                      </>
+                    ) : (
+                      availableCategories.map((category) => (
+                        <SelectItem key={category.id} value={category.id}>
+                          {category.name}
+                        </SelectItem>
+                      ))
+                    )}
+                  </SelectContent>
+                </Select>
               </div>
+            </div>
+
+            {/* Search */}
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="ค้นหารายการ, เลขที่อ้างอิง, หมวดหมู่..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10"
+              />
             </div>
           </div>
         </CardContent>
