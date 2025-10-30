@@ -696,7 +696,9 @@ export default function Reports() {
       {/* Detailed Table */}
       <Card>
         <CardHeader>
-          <CardTitle>สรุปรายละเอียดรายเดือน (ปีปัจจุบัน)</CardTitle>
+          <CardTitle>
+            สรุปรายละเอียดรายเดือน <span className="text-muted-foreground">(ปี {currentYear + 543})</span>
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="overflow-x-auto">
