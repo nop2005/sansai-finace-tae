@@ -9,7 +9,7 @@ import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, L
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { format, startOfMonth, endOfMonth, startOfYear, endOfYear, startOfQuarter, endOfQuarter, subMonths, eachDayOfInterval, getDaysInMonth, getYear, getMonth, setMonth, setYear } from "date-fns";
+import { format, startOfMonth, endOfMonth, startOfYear, endOfYear, startOfQuarter, endOfQuarter, subMonths, subYears, eachDayOfInterval, getDaysInMonth, getYear, getMonth, setMonth, setYear, differenceInDays } from "date-fns";
 import { th } from "date-fns/locale";
 import { formatThaiShortDate } from "@/utils/dateFormat";
 import { cn } from "@/lib/utils";
@@ -241,64 +241,86 @@ export default function Reports() {
     expense: amount
   }))].slice(0, 8);
 
-  // Calculate cumulative daily expenses for current month
-  const daysInCurrentMonth = getDaysInMonth(startDate);
-  const currentMonthStart = startOfMonth(startDate);
-  const currentMonthEnd = endOfMonth(startDate);
+  // Calculate cumulative daily expenses - adapt based on period type
+  const daysInPeriod = differenceInDays(endDate, startDate) + 1;
+  
+  // Calculate comparison period based on period type
+  let comparisonStartDate: Date;
+  let comparisonEndDate: Date;
+  let comparisonLabel: string;
+
+  if (periodType === "yearly") {
+    // Compare with previous year
+    comparisonStartDate = subYears(startDate, 1);
+    comparisonEndDate = subYears(endDate, 1);
+    comparisonLabel = `ปีก่อนหน้า`;
+  } else if (periodType === "quarterly") {
+    // Compare with same quarter of previous year
+    comparisonStartDate = subYears(startDate, 1);
+    comparisonEndDate = subYears(endDate, 1);
+    comparisonLabel = `ไตรมาสเดียวกันปีก่อนหน้า`;
+  } else {
+    // Monthly and custom: compare with previous 3 months average (original logic)
+    comparisonStartDate = subMonths(startOfMonth(startDate), 3);
+    comparisonEndDate = subMonths(startOfMonth(startDate), 1);
+    comparisonLabel = `ค่าเฉลี่ย 3 เดือนก่อนหน้า`;
+  }
+
   const dailyCumulativeExpense = Array.from({
-    length: daysInCurrentMonth
+    length: daysInPeriod
   }, (_, dayIndex) => {
     const day = dayIndex + 1;
-    const dayDate = new Date(currentMonthStart.getFullYear(), currentMonthStart.getMonth(), day);
+    const dayDate = new Date(startDate);
+    dayDate.setDate(startDate.getDate() + dayIndex);
 
-    // Calculate cumulative expense up to this day in current month
+    // Calculate cumulative expense up to this day in current period
     const cumulativeExpense = transactions.filter(t => {
       const tDate = new Date(t.date);
-      return t.type === "expense" && tDate >= currentMonthStart && tDate <= dayDate;
+      return t.type === "expense" && tDate >= startDate && tDate <= dayDate;
     }).reduce((sum, t) => sum + Number(t.amount), 0);
+
+    let comparisonValue = 0;
+
+    if (periodType === "yearly" || periodType === "quarterly") {
+      // For yearly/quarterly: compare with same day of previous period
+      const comparisonDayDate = new Date(comparisonStartDate);
+      comparisonDayDate.setDate(comparisonStartDate.getDate() + dayIndex);
+      
+      comparisonValue = transactions.filter(t => {
+        const tDate = new Date(t.date);
+        return t.type === "expense" && tDate >= comparisonStartDate && tDate <= comparisonDayDate;
+      }).reduce((sum, t) => sum + Number(t.amount), 0);
+    } else {
+      // For monthly/custom: average from previous 3 months
+      const currentMonthStart = startOfMonth(startDate);
+      const prev3MonthsData = Array.from({
+        length: 3
+      }, (_, monthOffset) => {
+        const monthDate = subMonths(currentMonthStart, monthOffset + 1);
+        const monthStart = startOfMonth(monthDate);
+        return monthStart;
+      });
+
+      const monthAverages = prev3MonthsData.map((monthStart) => {
+        const daysInPrevMonth = getDaysInMonth(monthStart);
+        const actualDay = Math.min(day, daysInPrevMonth);
+        const dayDate = new Date(monthStart.getFullYear(), monthStart.getMonth(), actualDay);
+
+        return transactions.filter(t => {
+          const tDate = new Date(t.date);
+          return t.type === "expense" && tDate >= monthStart && tDate <= dayDate;
+        }).reduce((sum, t) => sum + Number(t.amount), 0);
+      });
+
+      const total = monthAverages.reduce((sum, val) => sum + val, 0);
+      comparisonValue = total / 3;
+    }
+
     return {
       day,
       currentMonth: cumulativeExpense,
-      average3Months: 0 // Will calculate next
+      average3Months: comparisonValue
     };
-  });
-
-  // Calculate average cumulative expense from previous 3 months
-  const prev3MonthsData = Array.from({
-    length: 3
-  }, (_, monthOffset) => {
-    const monthDate = subMonths(currentMonthStart, monthOffset + 1);
-    const monthStart = startOfMonth(monthDate);
-    const monthEnd = endOfMonth(monthDate);
-    return {
-      monthStart,
-      monthEnd
-    };
-  });
-
-  // For each day, calculate average from previous 3 months
-  dailyCumulativeExpense.forEach((dayData, dayIndex) => {
-    const day = dayIndex + 1;
-    const monthAverages = prev3MonthsData.map(({
-      monthStart,
-      monthEnd
-    }) => {
-      // Use the last day of the month if the current day doesn't exist in that month
-      const daysInPrevMonth = getDaysInMonth(monthStart);
-      const actualDay = Math.min(day, daysInPrevMonth);
-      const dayDate = new Date(monthStart.getFullYear(), monthStart.getMonth(), actualDay);
-
-      // Calculate cumulative expense up to this day in that previous month
-      const cumulativeExpense = transactions.filter(t => {
-        const tDate = new Date(t.date);
-        return t.type === "expense" && tDate >= monthStart && tDate <= dayDate;
-      }).reduce((sum, t) => sum + Number(t.amount), 0);
-      return cumulativeExpense;
-    });
-
-    // Calculate average from all 3 months
-    const total = monthAverages.reduce((sum, val) => sum + val, 0);
-    dayData.average3Months = total / 3;
   });
 
   // Calculate totals for current month
@@ -568,14 +590,14 @@ export default function Reports() {
       {/* Cumulative Daily Expense Chart */}
       <Card>
         <CardHeader>
-          <CardTitle>เปรียบเทียบรายจ่ายย้อนหลัง 3 เดือน ({getPeriodDisplayText()})</CardTitle>
+          <CardTitle>เปรียบเทียบรายจ่าย{periodType === "yearly" ? "ปีก่อนหน้า" : periodType === "quarterly" ? "ไตรมาสก่อนหน้า" : "ย้อนหลัง 3 เดือน"} ({getPeriodDisplayText()})</CardTitle>
           <div className="flex flex-col sm:flex-row gap-4 mt-4">
             <div>
-              <p className="text-sm text-muted-foreground">การใช้จ่ายสะสมเดือนนี้</p>
+              <p className="text-sm text-muted-foreground">การใช้จ่ายสะสม{periodType === "monthly" || periodType === "custom" ? "เดือนนี้" : periodType === "quarterly" ? "ไตรมาสนี้" : "ปีนี้"}</p>
               <p className="text-2xl font-bold text-expense">{totalExpenseCurrentMonth.toLocaleString()}</p>
             </div>
             <div>
-              <p className="text-sm text-muted-foreground">รายจ่ายเฉลี่ยย้อนหลัง 3 เดือน</p>
+              <p className="text-sm text-muted-foreground">{comparisonLabel}</p>
               <p className="text-2xl font-bold text-gray-500">{totalAverage3Months.toLocaleString(undefined, {
                 minimumFractionDigits: 2,
                 maximumFractionDigits: 2
@@ -588,7 +610,7 @@ export default function Reports() {
             <LineChart data={dailyCumulativeExpense}>
               <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
               <XAxis dataKey="day" className="text-xs" label={{
-              value: `${format(currentMonthStart, 'MM/yyyy', {
+              value: `${format(startDate, 'MM/yyyy', {
                 locale: th
               })}`,
               position: 'insideBottom',
@@ -601,15 +623,15 @@ export default function Reports() {
               borderRadius: "8px"
             }} formatter={(value: number) => value.toLocaleString('th-TH', {
               maximumFractionDigits: 0
-            })} labelFormatter={day => `${day}/${format(currentMonthStart, 'MM/yyyy', {
+            })} labelFormatter={day => `${day}/${format(startDate, 'MM/yyyy', {
               locale: th
             })}`} />
               <Legend />
-              <Line type="monotone" dataKey="currentMonth" name="เดือนนี้" stroke="hsl(var(--expense))" strokeWidth={3} dot={{
+              <Line type="monotone" dataKey="currentMonth" name={periodType === "monthly" || periodType === "custom" ? "เดือนนี้" : periodType === "quarterly" ? "ไตรมาสนี้" : "ปีนี้"} stroke="hsl(var(--expense))" strokeWidth={3} dot={{
               fill: "hsl(var(--expense))",
               r: 4
             }} />
-              <Line type="monotone" dataKey="average3Months" name="ค่าเฉลี่ย 3 เดือนก่อนหน้า" stroke="hsl(var(--muted-foreground))" strokeWidth={2} strokeDasharray="5 5" dot={{
+              <Line type="monotone" dataKey="average3Months" name={comparisonLabel} stroke="hsl(var(--muted-foreground))" strokeWidth={2} strokeDasharray="5 5" dot={{
               fill: "hsl(var(--muted-foreground))",
               r: 3
             }} />
