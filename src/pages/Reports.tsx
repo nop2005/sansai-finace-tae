@@ -505,7 +505,7 @@ export default function Reports() {
         {/* Monthly Trends */}
         <Card>
           <CardHeader>
-            <CardTitle>แนวโน้มรายเดือน (ปีปัจจุบัน)</CardTitle>
+            <CardTitle>แนวโน้มรายเดือน (ปี {currentYear + 543})</CardTitle>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={350}>
