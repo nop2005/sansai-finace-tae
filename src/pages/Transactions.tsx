@@ -434,10 +434,12 @@ export default function Transactions() {
               </div>
 
               {/* Category Filter */}
-              <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-                <SelectTrigger className="w-full md:w-[200px]">
-                  <Filter className="h-4 w-4 mr-2" />
-                  <SelectValue placeholder="ทั้งหมด" />
+              <div className="flex items-center gap-3 w-full md:w-auto">
+                <span className="text-sm font-medium whitespace-nowrap">หมวดหมู่</span>
+                <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+                  <SelectTrigger className="w-full md:w-[200px]">
+                    <Filter className="h-4 w-4 mr-2" />
+                    <SelectValue placeholder="ทั้งหมด" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">ทั้งหมด</SelectItem>
@@ -477,6 +479,7 @@ export default function Transactions() {
                   )}
                 </SelectContent>
               </Select>
+              </div>
             </div>
           </div>
         </CardContent>
