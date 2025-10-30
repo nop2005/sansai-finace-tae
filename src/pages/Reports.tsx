@@ -383,17 +383,8 @@ export default function Reports() {
           </p>
         </div>
 
-        {/* Action Buttons */}
+        {/* Download Buttons */}
         <div className="flex gap-2">
-          <Button onClick={() => navigate("/record-transaction")}>
-            บันทึกรายการ
-          </Button>
-          <Button variant="outline">
-            บันทึกรายการลูกหนี้-เจ้าหนี้
-          </Button>
-          <Button variant="outline">
-            รายการบัญชีเงินฝาก
-          </Button>
           <Button variant="outline" onClick={() => handleDownload("pdf")}>
             <Download className="mr-2 h-4 w-4" />
             PDF
