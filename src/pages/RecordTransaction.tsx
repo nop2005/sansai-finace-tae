@@ -18,14 +18,22 @@ export default function RecordTransaction() {
   const { data: transactions = [], refetch: refetchTransactions } = useQuery({
     queryKey: ["today-transactions", format(selectedDate, "yyyy-MM-dd"), currentTab],
     queryFn: async () => {
+      const dateStr = format(selectedDate, "yyyy-MM-dd");
+      console.log("🔍 Fetching transactions for date:", dateStr, "type:", currentTab);
+      
       const { data, error } = await supabase
         .from("transactions")
         .select("*")
-        .eq("date", format(selectedDate, "yyyy-MM-dd"))
+        .eq("date", dateStr)
         .eq("type", currentTab)
         .order("created_at", { ascending: false });
       
-      if (error) throw error;
+      if (error) {
+        console.error("❌ Error fetching transactions:", error);
+        throw error;
+      }
+      
+      console.log("✅ Fetched transactions:", data?.length || 0, "items", data);
       return data || [];
     },
   });
