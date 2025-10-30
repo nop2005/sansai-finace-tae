@@ -19,10 +19,17 @@ import {
 export interface ComboboxOption {
   value: string;
   label: string;
+  category?: string;
+}
+
+export interface ComboboxGroup {
+  category: string;
+  items: ComboboxOption[];
 }
 
 interface ComboboxProps {
-  options: ComboboxOption[];
+  options?: ComboboxOption[];
+  groups?: ComboboxGroup[];
   value?: string;
   onValueChange?: (value: string) => void;
   placeholder?: string;
@@ -30,11 +37,12 @@ interface ComboboxProps {
   emptyText?: string;
   className?: string;
   disabled?: boolean;
-  onSearchStart?: () => void; // Callback when user starts searching
+  onSearchStart?: () => void;
 }
 
 export function Combobox({
   options,
+  groups,
   value,
   onValueChange,
   placeholder = "เลือก...",
@@ -47,13 +55,22 @@ export function Combobox({
   const [open, setOpen] = React.useState(false);
   const [searchValue, setSearchValue] = React.useState("");
 
-  // Handle search value change
   const handleSearchChange = (search: string) => {
     setSearchValue(search);
     if (search && onSearchStart) {
       onSearchStart();
     }
   };
+
+  // Get all options from groups or options prop
+  const allOptions = React.useMemo(() => {
+    if (groups) {
+      return groups.flatMap(g => g.items);
+    }
+    return options || [];
+  }, [groups, options]);
+
+  const selectedLabel = allOptions.find((option) => option.value === value)?.label;
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -65,13 +82,11 @@ export function Combobox({
           className={cn("w-full justify-between", className)}
           disabled={disabled}
         >
-          {value
-            ? options.find((option) => option.value === value)?.label
-            : placeholder}
+          {selectedLabel || placeholder}
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-full p-0" align="start">
+      <PopoverContent className="w-full p-0 bg-popover" align="start" style={{ zIndex: 9999 }}>
         <Command>
           <CommandInput 
             placeholder={searchPlaceholder} 
@@ -80,26 +95,57 @@ export function Combobox({
           />
           <CommandList>
             <CommandEmpty>{emptyText}</CommandEmpty>
-            <CommandGroup>
-              {options.map((option) => (
-                <CommandItem
-                  key={option.value}
-                  value={option.label}
-                  onSelect={() => {
-                    onValueChange?.(option.value === value ? "" : option.value);
-                    setOpen(false);
-                  }}
-                >
-                  <Check
-                    className={cn(
-                      "mr-2 h-4 w-4",
-                      value === option.value ? "opacity-100" : "opacity-0"
-                    )}
-                  />
-                  {option.label}
-                </CommandItem>
-              ))}
-            </CommandGroup>
+            {groups ? (
+              // Render grouped options
+              groups.map((group) => (
+                <CommandGroup key={group.category} heading={group.category}>
+                  {group.items.map((option) => (
+                    <CommandItem
+                      key={option.value}
+                      value={option.label}
+                      keywords={[option.label]}
+                      onSelect={() => {
+                        onValueChange?.(option.value === value ? "" : option.value);
+                        setOpen(false);
+                        setSearchValue("");
+                      }}
+                    >
+                      <Check
+                        className={cn(
+                          "mr-2 h-4 w-4",
+                          value === option.value ? "opacity-100" : "opacity-0"
+                        )}
+                      />
+                      {option.label}
+                    </CommandItem>
+                  ))}
+                </CommandGroup>
+              ))
+            ) : (
+              // Render ungrouped options
+              <CommandGroup>
+                {allOptions.map((option) => (
+                  <CommandItem
+                    key={option.value}
+                    value={option.label}
+                    keywords={[option.label]}
+                    onSelect={() => {
+                      onValueChange?.(option.value === value ? "" : option.value);
+                      setOpen(false);
+                      setSearchValue("");
+                    }}
+                  >
+                    <Check
+                      className={cn(
+                        "mr-2 h-4 w-4",
+                        value === option.value ? "opacity-100" : "opacity-0"
+                      )}
+                    />
+                    {option.label}
+                  </CommandItem>
+                ))}
+              </CommandGroup>
+            )}
           </CommandList>
         </Command>
       </PopoverContent>

@@ -3,7 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Combobox, ComboboxOption } from "@/components/ui/combobox";
+import { Combobox, ComboboxOption, ComboboxGroup } from "@/components/ui/combobox";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useState, useMemo } from "react";
@@ -56,30 +56,29 @@ export default function ExpenseForm({ onDateChange, onSuccess }: ExpenseFormProp
     },
   });
 
-  // Filter items based on selected category
-  const filteredItems = useMemo(() => {
-    if (!formData.category || formData.category === "all") return items;
-    return items.filter((item: any) => item.category_id === formData.category);
-  }, [items, formData.category]);
-
-  // Prepare combobox options
-  const categoryOptions: ComboboxOption[] = [
-    { value: "all", label: "ทุกหมวดหมู่" },
-    ...categories.map((cat: any) => ({
-      value: cat.id,
-      label: cat.name,
-    }))
-  ];
-
-  const itemOptions: ComboboxOption[] = filteredItems.map((item: any) => ({
-    value: item.id,
-    label: item.name,
-  }));
-
-  // Handler for category change
-  const handleCategoryChange = (categoryId: string) => {
-    setFormData({ ...formData, category: categoryId, item: "" });
-  };
+  // Prepare grouped item options
+  const itemGroups: ComboboxGroup[] = useMemo(() => {
+    const groups: ComboboxGroup[] = [];
+    
+    categories.forEach((cat: any) => {
+      const categoryItems = items
+        .filter((item: any) => item.category_id === cat.id)
+        .map((item: any) => ({
+          value: item.id,
+          label: item.name,
+          category: cat.name,
+        }));
+      
+      if (categoryItems.length > 0) {
+        groups.push({
+          category: cat.name,
+          items: categoryItems,
+        });
+      }
+    });
+    
+    return groups;
+  }, [categories, items]);
 
   // Handler for item change
   const handleItemChange = (itemId: string) => {
@@ -229,32 +228,15 @@ export default function ExpenseForm({ onDateChange, onSuccess }: ExpenseFormProp
                 </Popover>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="category">หมวดหมู่</Label>
-                <Combobox
-                  options={categoryOptions}
-                  value={formData.category}
-                  onValueChange={handleCategoryChange}
-                  placeholder="เลือกหมวดหมู่"
-                  searchPlaceholder="ค้นหาหมวดหมู่..."
-                  emptyText="ไม่พบหมวดหมู่"
-                />
-              </div>
-
-              <div className="space-y-2">
+              <div className="space-y-2 md:col-span-2">
                 <Label htmlFor="item">รายการรายจ่าย</Label>
                 <Combobox
-                  options={itemOptions}
+                  groups={itemGroups}
                   value={formData.item}
                   onValueChange={handleItemChange}
                   placeholder="เลือกรายการ"
                   searchPlaceholder="ค้นหารายการ..."
                   emptyText="ไม่พบรายการ"
-                  onSearchStart={() => {
-                    if (formData.category !== "all") {
-                      setFormData({ ...formData, category: "all" });
-                    }
-                  }}
                 />
               </div>
 
