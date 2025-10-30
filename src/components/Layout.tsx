@@ -30,8 +30,7 @@ import hospitalLogo from "@/assets/hospital-logo-nav.png";
 
 const allNavigation = [
   { name: "แดชบอร์ด", href: "/", icon: LayoutDashboard },
-  { name: "บันทึกรายรับ", href: "/income", icon: TrendingUp },
-  { name: "บันทึกรายจ่าย", href: "/expense", icon: TrendingDown },
+  { name: "บันทึกรายรับ-รายจ่าย", href: "/record", icon: FileText },
   { name: "รายการทั้งหมด", href: "/transactions", icon: FileText },
   { name: "รายงาน", href: "/reports", icon: BarChart3 },
   { name: "ตั้งค่า", href: "/settings", icon: Settings },

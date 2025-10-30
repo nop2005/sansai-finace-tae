@@ -5,8 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Layout from "./components/Layout";
 import Dashboard from "./pages/Dashboard";
-import Income from "./pages/Income";
-import Expense from "./pages/Expense";
+import RecordTransaction from "./pages/RecordTransaction";
 import Transactions from "./pages/Transactions";
 import Reports from "./pages/Reports";
 import MonthlyDetail from "./pages/MonthlyDetail";
@@ -30,8 +29,7 @@ const App = () => (
           <Route path="/auth" element={<Auth />} />
           <Route path="/pending-approval" element={<PendingApproval />} />
           <Route path="/" element={<Layout><Dashboard /></Layout>} />
-          <Route path="/income" element={<Layout><Income /></Layout>} />
-          <Route path="/expense" element={<Layout><Expense /></Layout>} />
+          <Route path="/record" element={<Layout><RecordTransaction /></Layout>} />
           <Route path="/transactions" element={<Layout><Transactions /></Layout>} />
           <Route path="/reports" element={<Layout><Reports /></Layout>} />
           <Route path="/monthly-detail/:year/:month" element={<Layout><MonthlyDetail /></Layout>} />
