@@ -184,13 +184,13 @@ export default function Reports() {
   const netProfit = totalIncome - totalExpense;
   const profitMargin = totalIncome > 0 ? netProfit / totalIncome * 100 : 0;
 
-  // Generate monthly data for all 12 months of current year
+  // Generate monthly data for all 12 months of selected year
   const monthNames = ["ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.", "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค."];
-  const currentYear = new Date().getFullYear();
+  const displayYear = selectedYear - 543; // Convert Buddhist year to Christian year
   const monthlyComparison = monthNames.map((monthName, index) => {
     const monthTransactions = transactions.filter(t => {
       const transactionDate = new Date(t.date);
-      return transactionDate.getFullYear() === currentYear && transactionDate.getMonth() === index;
+      return transactionDate.getFullYear() === displayYear && transactionDate.getMonth() === index;
     });
     const income = monthTransactions.filter(t => t.type === "income").reduce((sum, t) => sum + Number(t.amount), 0);
     const expense = monthTransactions.filter(t => t.type === "expense").reduce((sum, t) => sum + Number(t.amount), 0);
@@ -577,7 +577,7 @@ export default function Reports() {
         <Card>
           <CardHeader>
             <CardTitle>
-              แนวโน้มรายเดือน <span className="text-muted-foreground">(ปี {currentYear + 543})</span>
+              แนวโน้มรายเดือน <span className="text-muted-foreground">(ปี {selectedYear})</span>
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -699,7 +699,7 @@ export default function Reports() {
       <Card>
         <CardHeader>
           <CardTitle>
-            สรุปรายละเอียดรายเดือน <span className="text-muted-foreground">(ปี {currentYear + 543})</span>
+            สรุปรายละเอียดรายเดือน <span className="text-muted-foreground">(ปี {selectedYear})</span>
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -731,7 +731,7 @@ export default function Reports() {
                       {row.income > 0 ? (row.net / row.income * 100).toFixed(1) : "0.0"}%
                     </td>
                     <td className="text-center py-3 px-4">
-                      <Button variant="ghost" size="sm" onClick={() => navigate(`/monthly-detail/${currentYear}/${index + 1}`)} className="h-8 w-8 p-0">
+                      <Button variant="ghost" size="sm" onClick={() => navigate(`/monthly-detail/${displayYear}/${index + 1}`)} className="h-8 w-8 p-0">
                         <Eye className="h-4 w-4" />
                       </Button>
                     </td>
