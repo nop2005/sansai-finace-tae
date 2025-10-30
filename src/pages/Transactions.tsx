@@ -653,63 +653,6 @@ export default function Transactions() {
               </p>
             </div>
           </div>
-
-          {/* Pagination Controls and Items per Page */}
-          {!loading && sortedTransactions.length > 0 && totalPages > 1 && (
-            <div className="flex items-center justify-end gap-4 mt-4">
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-muted-foreground">แสดง</span>
-                <Select value={itemsPerPage.toString()} onValueChange={(value) => setItemsPerPage(Number(value))}>
-                  <SelectTrigger className="w-[100px]">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="20">20</SelectItem>
-                    <SelectItem value="50">50</SelectItem>
-                    <SelectItem value="100">100</SelectItem>
-                    <SelectItem value="200">200</SelectItem>
-                  </SelectContent>
-                </Select>
-                <span className="text-sm text-muted-foreground">รายการ</span>
-              </div>
-
-              <Pagination>
-                <PaginationContent>
-                  <PaginationItem>
-                    <PaginationPrevious 
-                      onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-                      className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
-                    />
-                  </PaginationItem>
-                  
-                  {getPageNumbers().map((page, index) => (
-                    page === 'ellipsis' ? (
-                      <PaginationItem key={`ellipsis-${index}`}>
-                        <PaginationEllipsis />
-                      </PaginationItem>
-                    ) : (
-                      <PaginationItem key={page}>
-                        <PaginationLink
-                          onClick={() => setCurrentPage(page as number)}
-                          isActive={currentPage === page}
-                          className="cursor-pointer"
-                        >
-                          {page}
-                        </PaginationLink>
-                      </PaginationItem>
-                    )
-                  ))}
-                  
-                  <PaginationItem>
-                    <PaginationNext 
-                      onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-                      className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
-                    />
-                  </PaginationItem>
-                </PaginationContent>
-              </Pagination>
-            </div>
-          )}
         </CardHeader>
         <CardContent>
           {loading ? (
@@ -980,6 +923,63 @@ export default function Transactions() {
           {!loading && sortedTransactions.length === 0 && (
             <div className="text-center py-12 text-muted-foreground">
               <p>ไม่พบรายการที่ตรงกับการค้นหา</p>
+            </div>
+          )}
+
+          {/* Pagination Controls */}
+          {!loading && sortedTransactions.length > 0 && totalPages > 1 && (
+            <div className="flex items-center justify-end gap-4 mt-6 pt-6 border-t border-border">
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-muted-foreground">แสดง</span>
+                <Select value={itemsPerPage.toString()} onValueChange={(value) => setItemsPerPage(Number(value))}>
+                  <SelectTrigger className="w-[100px]">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="20">20</SelectItem>
+                    <SelectItem value="50">50</SelectItem>
+                    <SelectItem value="100">100</SelectItem>
+                    <SelectItem value="200">200</SelectItem>
+                  </SelectContent>
+                </Select>
+                <span className="text-sm text-muted-foreground">รายการ</span>
+              </div>
+
+              <Pagination>
+                <PaginationContent>
+                  <PaginationItem>
+                    <PaginationPrevious 
+                      onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                      className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                    />
+                  </PaginationItem>
+                  
+                  {getPageNumbers().map((page, index) => (
+                    page === 'ellipsis' ? (
+                      <PaginationItem key={`ellipsis-${index}`}>
+                        <PaginationEllipsis />
+                      </PaginationItem>
+                    ) : (
+                      <PaginationItem key={page}>
+                        <PaginationLink
+                          onClick={() => setCurrentPage(page as number)}
+                          isActive={currentPage === page}
+                          className="cursor-pointer"
+                        >
+                          {page}
+                        </PaginationLink>
+                      </PaginationItem>
+                    )
+                  ))}
+                  
+                  <PaginationItem>
+                    <PaginationNext 
+                      onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                      className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                    />
+                  </PaginationItem>
+                </PaginationContent>
+              </Pagination>
             </div>
           )}
         </CardContent>
