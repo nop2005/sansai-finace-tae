@@ -14,40 +14,98 @@ export default function RecordTransaction() {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [currentTab, setCurrentTab] = useState("income");
 
-  const { data: transactions = [], refetch } = useQuery({
+  // Fetch all necessary data
+  const { data: transactions = [], refetch: refetchTransactions } = useQuery({
     queryKey: ["today-transactions", format(selectedDate, "yyyy-MM-dd"), currentTab],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("transactions")
-        .select(`
-          *,
-          income_categories(name),
-          expense_categories(name),
-          income_items(name),
-          expense_items(name),
-          profiles!transactions_created_by_fkey(full_name)
-        `)
+        .select("*")
         .eq("date", format(selectedDate, "yyyy-MM-dd"))
         .eq("type", currentTab)
         .order("created_at", { ascending: false });
       
       if (error) throw error;
-      return data;
+      return data || [];
+    },
+  });
+
+  const { data: incomeCategories = [] } = useQuery({
+    queryKey: ["income-categories-list"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("income_categories")
+        .select("*");
+      if (error) throw error;
+      return data || [];
+    },
+  });
+
+  const { data: expenseCategories = [] } = useQuery({
+    queryKey: ["expense-categories-list"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("expense_categories")
+        .select("*");
+      if (error) throw error;
+      return data || [];
+    },
+  });
+
+  const { data: incomeItems = [] } = useQuery({
+    queryKey: ["income-items-list"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("income_items")
+        .select("*");
+      if (error) throw error;
+      return data || [];
+    },
+  });
+
+  const { data: expenseItems = [] } = useQuery({
+    queryKey: ["expense-items-list"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("expense_items")
+        .select("*");
+      if (error) throw error;
+      return data || [];
+    },
+  });
+
+  const { data: profiles = [] } = useQuery({
+    queryKey: ["profiles-list"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("*");
+      if (error) throw error;
+      return data || [];
     },
   });
 
   const getCategoryName = (transaction: any) => {
     if (transaction.type === "income") {
-      return transaction.income_categories?.name || "-";
+      const category = incomeCategories.find((c: any) => c.id === transaction.category_id);
+      return category?.name || "-";
     }
-    return transaction.expense_categories?.name || "-";
+    const category = expenseCategories.find((c: any) => c.id === transaction.category_id);
+    return category?.name || "-";
   };
 
   const getItemName = (transaction: any) => {
     if (transaction.type === "income") {
-      return transaction.income_items?.name || "-";
+      const item = incomeItems.find((i: any) => i.id === transaction.item_id);
+      return item?.name || "-";
     }
-    return transaction.expense_items?.name || "-";
+    const item = expenseItems.find((i: any) => i.id === transaction.item_id);
+    return item?.name || "-";
+  };
+
+  const getCreatorName = (transaction: any) => {
+    const profile = profiles.find((p: any) => p.id === transaction.created_by);
+    return profile?.full_name || "-";
   };
 
   return (
@@ -68,10 +126,10 @@ export default function RecordTransaction() {
           </TabsTrigger>
         </TabsList>
         <TabsContent value="income" className="space-y-6">
-          <IncomeForm onDateChange={setSelectedDate} onSuccess={refetch} />
+          <IncomeForm onDateChange={setSelectedDate} onSuccess={refetchTransactions} />
         </TabsContent>
         <TabsContent value="expense" className="space-y-6">
-          <ExpenseForm onDateChange={setSelectedDate} onSuccess={refetch} />
+          <ExpenseForm onDateChange={setSelectedDate} onSuccess={refetchTransactions} />
         </TabsContent>
       </Tabs>
 
@@ -102,7 +160,7 @@ export default function RecordTransaction() {
                     <TableCell className="text-right font-medium">
                       {parseFloat(transaction.amount).toLocaleString('th-TH', { minimumFractionDigits: 2 })}
                     </TableCell>
-                    <TableCell>{transaction.profiles?.full_name || "-"}</TableCell>
+                    <TableCell>{getCreatorName(transaction)}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>
