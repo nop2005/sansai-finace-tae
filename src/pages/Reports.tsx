@@ -244,13 +244,16 @@ export default function Reports() {
   // Calculate cumulative expenses - adapt based on period type
   let dailyCumulativeExpense: Array<{ day: number | string; currentMonth: number; average3Months: number }>;
   let comparisonLabel: string;
+  let comparisonPeriodText: string;
 
   if (periodType === "yearly") {
     // For yearly only: show monthly data
     const monthsInPeriod = 12;
     const startMonth = startDate.getMonth();
     
-    comparisonLabel = "ปีก่อนหน้า";
+    const prevYear = selectedYear - 1;
+    comparisonPeriodText = `ปี ${prevYear}`;
+    comparisonLabel = `ปีก่อนหน้า (${comparisonPeriodText})`;
     const comparisonStartDate = subYears(startDate, 1);
 
     dailyCumulativeExpense = Array.from({ length: monthsInPeriod }, (_, monthIndex) => {
@@ -285,8 +288,11 @@ export default function Reports() {
     const totalDays = differenceInDays(endDate, startDate) + 1;
     const weeksInPeriod = Math.ceil(totalDays / 7);
     
-    comparisonLabel = "ไตรมาสเดียวกันปีก่อนหน้า";
     const comparisonStartDate = subYears(startDate, 1);
+    const comparisonEndDate = subYears(endDate, 1);
+    const quarter = quarters.find(q => q.value === selectedQuarter);
+    comparisonPeriodText = `${quarter?.label} ${quarter?.dateRange} ${selectedYear - 1}`;
+    comparisonLabel = `ไตรมาสเดียวกันปีก่อนหน้า (${comparisonPeriodText})`;
 
     dailyCumulativeExpense = Array.from({ length: weeksInPeriod }, (_, weekIndex) => {
       // Calculate the last day of this week
@@ -318,7 +324,12 @@ export default function Reports() {
   } else {
     // For monthly/custom: show daily data with 3-month average comparison
     const daysInPeriod = differenceInDays(endDate, startDate) + 1;
-    comparisonLabel = "ค่าเฉลี่ย 3 เดือนก่อนหน้า";
+    
+    const currentMonthStart = startOfMonth(startDate);
+    const month3Ago = subMonths(currentMonthStart, 3);
+    const month1Ago = subMonths(currentMonthStart, 1);
+    comparisonPeriodText = `${formatThaiShortDate(month3Ago)} - ${formatThaiShortDate(endOfMonth(month1Ago))}`;
+    comparisonLabel = `ค่าเฉลี่ย 3 เดือนก่อนหน้า (${comparisonPeriodText})`;
 
     dailyCumulativeExpense = Array.from({ length: daysInPeriod }, (_, dayIndex) => {
       const dayDate = new Date(startDate);
