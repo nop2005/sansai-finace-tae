@@ -281,32 +281,36 @@ export default function Reports() {
       };
     });
   } else if (periodType === "quarterly") {
-    // For quarterly: show daily data with previous year comparison
-    const daysInPeriod = differenceInDays(endDate, startDate) + 1;
+    // For quarterly: show weekly data with previous year comparison
+    const totalDays = differenceInDays(endDate, startDate) + 1;
+    const weeksInPeriod = Math.ceil(totalDays / 7);
+    
     comparisonLabel = "ไตรมาสเดียวกันปีก่อนหน้า";
     const comparisonStartDate = subYears(startDate, 1);
 
-    dailyCumulativeExpense = Array.from({ length: daysInPeriod }, (_, dayIndex) => {
-      const dayDate = new Date(startDate);
-      dayDate.setDate(startDate.getDate() + dayIndex);
+    dailyCumulativeExpense = Array.from({ length: weeksInPeriod }, (_, weekIndex) => {
+      // Calculate the last day of this week
+      const daysIntoQuarter = Math.min((weekIndex + 1) * 7, totalDays);
+      const weekEndDate = new Date(startDate);
+      weekEndDate.setDate(startDate.getDate() + daysIntoQuarter - 1);
 
-      // Calculate cumulative expense up to this day in current period
+      // Calculate cumulative expense up to end of this week in current period
       const cumulativeExpense = transactions.filter(t => {
         const tDate = new Date(t.date);
-        return t.type === "expense" && tDate >= startDate && tDate <= dayDate;
+        return t.type === "expense" && tDate >= startDate && tDate <= weekEndDate;
       }).reduce((sum, t) => sum + Number(t.amount), 0);
 
-      // Calculate cumulative expense for same day in previous year
-      const comparisonDayDate = new Date(comparisonStartDate);
-      comparisonDayDate.setDate(comparisonStartDate.getDate() + dayIndex);
+      // Calculate cumulative expense for same week in previous year
+      const comparisonWeekEndDate = new Date(comparisonStartDate);
+      comparisonWeekEndDate.setDate(comparisonStartDate.getDate() + daysIntoQuarter - 1);
 
       const comparisonValue = transactions.filter(t => {
         const tDate = new Date(t.date);
-        return t.type === "expense" && tDate >= comparisonStartDate && tDate <= comparisonDayDate;
+        return t.type === "expense" && tDate >= comparisonStartDate && tDate <= comparisonWeekEndDate;
       }).reduce((sum, t) => sum + Number(t.amount), 0);
 
       return {
-        day: dayIndex + 1,
+        day: `สัปดาห์ ${weekIndex + 1}`,
         currentMonth: cumulativeExpense,
         average3Months: comparisonValue
       };
