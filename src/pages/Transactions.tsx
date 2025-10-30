@@ -483,9 +483,8 @@ export default function Transactions() {
               </Popover>
             </div>
 
-            {/* Type Filter Buttons and Category Filter */}
+            {/* Category Filter */}
             <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-end">
-              {/* Category Filter */}
               <div className="flex items-center gap-3 w-full sm:w-auto">
                 <span className="text-sm font-medium whitespace-nowrap">หมวดหมู่</span>
                 <Select value={categoryFilter} onValueChange={setCategoryFilter}>
@@ -531,41 +530,6 @@ export default function Transactions() {
                     )}
                   </SelectContent>
                 </Select>
-              </div>
-              
-              <div className="flex gap-2">
-                <Button
-                  variant={filterType === "all" ? "default" : "outline"}
-                  onClick={() => {
-                    setFilterType("all");
-                    setCategoryFilter("all");
-                  }}
-                  className="flex-1 sm:flex-initial"
-                >
-                  ทั้งหมด
-                </Button>
-                <Button
-                  variant={filterType === "income" ? "default" : "outline"}
-                  onClick={() => {
-                    setFilterType("income");
-                    setCategoryFilter("all");
-                  }}
-                  className="flex-1 sm:flex-initial"
-                >
-                  <TrendingUp className="h-4 w-4 mr-2" />
-                  รายรับ
-                </Button>
-                <Button
-                  variant={filterType === "expense" ? "default" : "outline"}
-                  onClick={() => {
-                    setFilterType("expense");
-                    setCategoryFilter("all");
-                  }}
-                  className="flex-1 sm:flex-initial"
-                >
-                  <TrendingDown className="h-4 w-4 mr-2" />
-                  รายจ่าย
-                </Button>
               </div>
             </div>
 
@@ -625,7 +589,7 @@ export default function Transactions() {
           <div className="flex items-center justify-between gap-4 flex-wrap">
             <CardTitle>รายการทั้งหมด ({sortedTransactions.length} รายการ)</CardTitle>
             
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-4">
               <Button
                 variant={sortBy === "date" ? "default" : "outline"}
                 size="sm"
@@ -642,6 +606,43 @@ export default function Transactions() {
                 <FolderTree className="h-4 w-4 mr-2" />
                 เรียงตามหมวด
               </Button>
+              
+              <div className="h-6 w-px bg-border"></div>
+              
+              <div className="flex gap-2">
+                <Button
+                  variant={filterType === "all" ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => {
+                    setFilterType("all");
+                    setCategoryFilter("all");
+                  }}
+                >
+                  ทั้งหมด
+                </Button>
+                <Button
+                  variant={filterType === "income" ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => {
+                    setFilterType("income");
+                    setCategoryFilter("all");
+                  }}
+                >
+                  <TrendingUp className="h-4 w-4 mr-2" />
+                  รายรับ
+                </Button>
+                <Button
+                  variant={filterType === "expense" ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => {
+                    setFilterType("expense");
+                    setCategoryFilter("all");
+                  }}
+                >
+                  <TrendingDown className="h-4 w-4 mr-2" />
+                  รายจ่าย
+                </Button>
+              </div>
             </div>
 
             <div className="text-right">
