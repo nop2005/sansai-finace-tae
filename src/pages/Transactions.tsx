@@ -813,14 +813,16 @@ export default function Transactions() {
               ) : (
                 // Regular list view (sorted by date) grouped by date
                 (Object.values(groupedByDate) as DateGroup[]).map((dateGroup) => (
-                  <div key={dateGroup.date} className="space-y-2">
+                  <div key={dateGroup.date} className="rounded-lg border border-border overflow-hidden">
                     {/* Date Header */}
-                    <div className="text-sm text-muted-foreground font-medium px-2">
-                      {formatThaiShortDate(new Date(dateGroup.date))}
+                    <div className="bg-muted/30 px-4 py-2 border-b border-border">
+                      <div className="text-sm text-muted-foreground font-medium">
+                        {formatThaiShortDate(new Date(dateGroup.date))}
+                      </div>
                     </div>
 
                     {/* Transactions for this date */}
-                    <div className="space-y-2">
+                    <div className="divide-y divide-border">
                       {dateGroup.transactions.map((transaction) => {
                         const categoryName = getCategoryName(transaction.category_id, transaction.type);
                         const itemName = getItemName(transaction.item_id, transaction.type);
@@ -829,7 +831,7 @@ export default function Transactions() {
                         return (
                           <div
                             key={transaction.id}
-                            className="flex items-center justify-between p-4 rounded-lg border border-border hover:bg-accent/50 transition-colors"
+                            className="flex items-center justify-between p-4 hover:bg-accent/50 transition-colors"
                           >
                             <div className="flex items-center gap-4 flex-1">
                               {/* Icon */}
