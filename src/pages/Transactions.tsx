@@ -483,8 +483,20 @@ export default function Transactions() {
               </Popover>
             </div>
 
-            {/* Category Filter */}
-            <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-end">
+            {/* Search and Category Filter */}
+            <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
+              {/* Search */}
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="ค้นหารายการ, เลขที่อ้างอิง, หมวดหมู่..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+
+              {/* Category Filter */}
               <div className="flex items-center gap-3 w-full sm:w-auto">
                 <span className="text-sm font-medium whitespace-nowrap">หมวดหมู่</span>
                 <Select value={categoryFilter} onValueChange={setCategoryFilter}>
@@ -531,17 +543,6 @@ export default function Transactions() {
                   </SelectContent>
                 </Select>
               </div>
-            </div>
-
-            {/* Search */}
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="ค้นหารายการ, เลขที่อ้างอิง, หมวดหมู่..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
-              />
             </div>
           </div>
         </CardContent>
