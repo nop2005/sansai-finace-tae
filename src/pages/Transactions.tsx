@@ -1042,7 +1042,9 @@ export default function Transactions() {
                       <div>
                         <p className="text-sm text-muted-foreground">ผู้แก้ไข</p>
                         <p className="font-medium">
-                          {getEditorName(selectedTransaction.edited_by)}
+                          {selectedTransaction.edited_by 
+                            ? getEditorName(selectedTransaction.edited_by)
+                            : "ไม่ทราบชื่อ"}
                         </p>
                       </div>
                       <div>
