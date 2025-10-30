@@ -162,7 +162,7 @@ export default function RecordTransaction() {
               <TableBody>
                 {transactions.map((transaction: any) => (
                   <TableRow key={transaction.id}>
-                    <TableCell>{formatThaiShortDate(new Date(transaction.created_at))}</TableCell>
+                    <TableCell>{formatThaiShortDate(new Date(transaction.date))}</TableCell>
                     <TableCell>{getItemName(transaction)}</TableCell>
                     <TableCell>{getCategoryName(transaction)}</TableCell>
                     <TableCell className="text-right font-medium">
