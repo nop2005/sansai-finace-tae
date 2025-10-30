@@ -15,7 +15,12 @@ import { formatThaiShortDate } from "@/utils/dateFormat";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 
-export default function ExpenseForm() {
+interface ExpenseFormProps {
+  onDateChange?: (date: Date) => void;
+  onSuccess?: () => void;
+}
+
+export default function ExpenseForm({ onDateChange, onSuccess }: ExpenseFormProps = {}) {
   const [formData, setFormData] = useState({
     date: new Date(),
     category: "",
@@ -150,6 +155,7 @@ export default function ExpenseForm() {
         reference: "",
       });
       setFiles([]);
+      onSuccess?.();
     },
     onError: (error) => {
       console.error("Error saving expense:", error);
@@ -211,7 +217,12 @@ export default function ExpenseForm() {
                     <Calendar
                       mode="single"
                       selected={formData.date}
-                      onSelect={(date) => date && setFormData({ ...formData, date })}
+                      onSelect={(date) => {
+                        if (date) {
+                          setFormData({ ...formData, date });
+                          onDateChange?.(date);
+                        }
+                      }}
                       initialFocus
                     />
                   </PopoverContent>

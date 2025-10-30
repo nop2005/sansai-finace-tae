@@ -15,7 +15,12 @@ import { formatThaiShortDate } from "@/utils/dateFormat";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 
-export default function IncomeForm() {
+interface IncomeFormProps {
+  onDateChange?: (date: Date) => void;
+  onSuccess?: () => void;
+}
+
+export default function IncomeForm({ onDateChange, onSuccess }: IncomeFormProps = {}) {
   const [formData, setFormData] = useState({
     date: new Date(),
     category: "",
@@ -150,6 +155,7 @@ export default function IncomeForm() {
         reference: "",
       });
       setFiles([]);
+      onSuccess?.();
     },
     onError: (error) => {
       console.error("Error saving income:", error);
@@ -211,7 +217,12 @@ export default function IncomeForm() {
                     <Calendar
                       mode="single"
                       selected={formData.date}
-                      onSelect={(date) => date && setFormData({ ...formData, date })}
+                      onSelect={(date) => {
+                        if (date) {
+                          setFormData({ ...formData, date });
+                          onDateChange?.(date);
+                        }
+                      }}
                       initialFocus
                     />
                   </PopoverContent>
