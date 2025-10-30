@@ -140,8 +140,18 @@ export default function Transactions() {
   };
 
   const getEditorName = (userId: string) => {
+    if (!userId) {
+      console.log("No userId provided");
+      return "ไม่ทราบชื่อ";
+    }
+    
+    console.log("Looking for user:", userId);
+    console.log("Available profiles:", profiles);
+    
     const profile = profiles.find((p) => p.id === userId);
-    return profile ? profile.full_name || profile.username : "ไม่ทราบชื่อ";
+    console.log("Found profile:", profile);
+    
+    return profile ? (profile.full_name || profile.username) : "ไม่ทราบชื่อ";
   };
 
   const canDelete = !userRoles.includes("ผู้บริหาร");
