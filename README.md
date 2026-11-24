@@ -1,4 +1,4 @@
-# Welcome to your Sansai
+# ระบบบันทึกรายรับรายจ่ายอย่างง่ายสำหรับโรงพยาบาล
 >>>>>>> 4ce66012363865c8edfe5d35fc8c78bc3a0cdc51
 
 ## Project info
